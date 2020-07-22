@@ -1,0 +1,36 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://Scripts/PlayerController.gd" type="Script" id=1]
+
+[sub_resource type="BoxShape" id=1]
+
+[sub_resource type="SpatialMaterial" id=2]
+albedo_color = Color( 0.219608, 0.572549, 0.945098, 1 )
+
+[node name="Player" type="KinematicBody"]
+script = ExtResource( 1 )
+
+[node name="CollisionShape" type="CollisionShape" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.989129, 0 )
+shape = SubResource( 1 )
+
+[node name="Camera" type="Camera" parent="."]
+transform = Transform( 1, 0, 0, 0, 0.900182, 0.435514, 0, -0.435514, 0.900182, 0, 9.25986, 15.053 )
+current = true
+size = 20.0
+far = 285.7
+
+[node name="Model" type="Spatial" parent="."]
+
+[node name="Body" type="CSGCylinder" parent="Model"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0 )
+height = 3.0
+material = SubResource( 2 )
+
+[node name="Eye" type="CSGSphere" parent="Model"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 2, 0.877413 )
+radius = 0.2
+
+[node name="Eye2" type="CSGSphere" parent="Model"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 2, 0.877 )
+radius = 0.2
