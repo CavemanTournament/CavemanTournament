@@ -10,6 +10,7 @@ vertex_color_use_as_albedo = true
 script = ExtResource( 1 )
 tile_size = 1.0
 num_cells = 200
+cell_position_range = 100
 min_room_size = 16
 
 [node name="Rooms" type="Node" parent="."]
@@ -22,7 +23,7 @@ min_room_size = 16
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, 1, 0, -1, -1.62921e-07, 0, 100, 0 )
 projection = 1
 fov = 90.7
-size = 200.0
+size = 343.72
 near = 0.1
 far = 687.3
 
