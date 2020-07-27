@@ -38,6 +38,7 @@ func make_cells():
 			$Corridors.add_child(cell)
 
 	$ImmediateGeometry.clear()
+
 	if self.debug:
 		for cell in cells:
 			draw_cell(cell)

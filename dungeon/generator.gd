@@ -6,7 +6,7 @@ var num_cells: int # Number of initially generated cells
 var cell_size_mean: int
 var cell_size_deviation: int
 
-var cell_position_range: int
+var cell_position_range: int # Range of possible initial cell positions
 
 var min_room_size: int # Turn all cells at least this big into rooms
 var corridor_width: int
@@ -52,23 +52,22 @@ func generate():
 		if cell.rect.size.x >= min_room_size:
 			cell.set_type(DungeonVariables.CELL_TYPE_ROOM)
 
-	if true:
-		# Get a graph of linked rooms
-		var room_graph = get_room_graph()
+	# Get a graph of linked rooms
+	var room_graph = get_room_graph()
 
-		var link_paths = []
+	var link_paths = []
 
-		for cell1_id in room_graph.nodes:
-			for cell2_id in room_graph.edges[cell1_id]:
-				link_paths.append(get_cell_link_path(cell1_id, cell2_id))
+	for cell1_id in room_graph.nodes:
+		for cell2_id in room_graph.edges[cell1_id]:
+			link_paths.append(get_cell_link_path(cell1_id, cell2_id))
 
-		# Add siderooms between linked rooms
-		for path in link_paths:
-			create_siderooms(path)
+	# Add siderooms between linked rooms
+	for path in link_paths:
+		create_siderooms(path)
 
-		# Add corridors between linked rooms
-		for path in link_paths:
-			create_corridors(path, corridor_width)
+	# Add corridors between linked rooms
+	for path in link_paths:
+		create_corridors(path, corridor_width)
 
 	# Return rooms, siderooms and corridors
 	var assigned_cells = []
