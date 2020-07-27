@@ -8,16 +8,49 @@
 
 config_version=4
 
-_global_script_classes=[  ]
+_global_script_classes=[ {
+"base": "RigidBody",
+"class": "DungeonCell",
+"language": "GDScript",
+"path": "res://dungeon/cell.gd"
+}, {
+"base": "Reference",
+"class": "DungeonGenerator",
+"language": "GDScript",
+"path": "res://dungeon/generator.gd"
+}, {
+"base": "Reference",
+"class": "Graph",
+"language": "GDScript",
+"path": "res://scripts/graph.gd"
+}, {
+"base": "Reference",
+"class": "PriorityQueue",
+"language": "GDScript",
+"path": "res://scripts/priority_queue.gd"
+}, {
+"base": "Reference",
+"class": "Util",
+"language": "GDScript",
+"path": "res://scripts/util.gd"
+} ]
 _global_script_class_icons={
-
+"DungeonCell": "",
+"DungeonGenerator": "",
+"Graph": "",
+"PriorityQueue": "",
+"Util": ""
 }
 
 [application]
 
 config/name="Caveman Tournament"
-run/main_scene="res://Levels/Test level.tscn"
+run/main_scene="res://levels/test_level.tscn"
 config/icon="res://icon.png"
+
+[autoload]
+
+DungeonVariables="*res://dungeon/variables.gd"
 
 [input]
 
