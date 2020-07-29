@@ -10,7 +10,6 @@ vertex_color_use_as_albedo = true
 script = ExtResource( 1 )
 tile_size = 1.0
 num_cells = 200
-cell_position_range = 10
 min_room_size = 16
 
 [node name="Rooms" type="Node" parent="."]

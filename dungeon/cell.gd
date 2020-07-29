@@ -4,7 +4,7 @@ class_name DungeonCell
 var id: int
 var height: float
 var rect: = Rect2()
-var type: = DungeonVariables.CELL_TYPE_NONE
+var type: int = DungeonVariables.CellType.NONE
 
 var collision_shape
 var mesh_instance
@@ -26,10 +26,10 @@ func _init(_id: int):
 	add_child(self.collision_shape)
 	add_child(self.mesh_instance)
 
-func distance_to(cell: DungeonCell):
+func distance_to(cell: DungeonCell) -> float:
 	return self.transform.origin.distance_to(cell.transform.origin)
 
-func set_size(size: Vector3):
+func set_size(size: Vector3) -> void:
 	self.height = size.y
 
 	var x = self.transform.origin.x - (size.x / 2)
@@ -39,13 +39,13 @@ func set_size(size: Vector3):
 	self.collision_shape.shape.extents = size
 	self.mesh_instance.mesh.size = size
 
-func get_size():
+func get_size() -> Vector3:
 	return Vector3(self.rect.size.x, self.height, self.rect.size.y)
 
-func move(translation: Vector3):
+func move(translation: Vector3) -> void:
 	set_position(self.transform.origin + translation)
 
-func set_position(pos: Vector3):
+func set_position(pos: Vector3) -> void:
 	self.transform.origin = pos
 	self.rect = Rect2(
 		pos.x - (self.rect.size.x / 2),
@@ -54,16 +54,16 @@ func set_position(pos: Vector3):
 		self.rect.size.y
 	)
 
-func set_rect(_rect: Rect2):
+func set_rect(_rect: Rect2) -> void:
 	self.rect = _rect
 	self.transform.origin.x = (rect.position.x + rect.end.x) / 2
 	self.transform.origin.z = (rect.position.y + rect.end.y) / 2
 
-func set_type(_type: int):
+func set_type(_type: int) -> void:
 	self.type = _type
 	self.mesh_instance.mesh.set_material(DungeonVariables.CELL_MATERIALS[type])
 
-func merge(cell: DungeonCell):
+func merge(cell: DungeonCell) -> bool:
 	if !cell:
 		return false
 
@@ -77,14 +77,14 @@ func merge(cell: DungeonCell):
 
 	return false
 
-func is_typeless():
-	return self.type == DungeonVariables.CELL_TYPE_NONE
+func is_typeless() -> bool:
+	return self.type == DungeonVariables.CellType.NONE
 
-func is_room():
-	return self.type == DungeonVariables.CELL_TYPE_ROOM
+func is_room() -> bool:
+	return self.type == DungeonVariables.CellType.ROOM
 
-func is_sideroom():
-	return self.type == DungeonVariables.CELL_TYPE_SIDEROOM
+func is_sideroom() -> bool:
+	return self.type == DungeonVariables.CellType.SIDEROOM
 
-func is_corridor():
-	return self.type == DungeonVariables.CELL_TYPE_CORRIDOR
+func is_corridor() -> bool:
+	return self.type == DungeonVariables.CellType.CORRIDOR

@@ -2,7 +2,7 @@ class_name PriorityQueue
 
 var data = []
 
-func push(item, priority):
+func push(item, priority: float) -> void:
 	self.data.append({"item": item, "priority": priority})
 	_up()
 
@@ -19,10 +19,10 @@ func pop():
 
 	return top["item"]
 
-func size():
+func size() -> int:
 	return self.data.size()
 
-func _up():
+func _up() -> void:
 	var pos = self.data.size() - 1
 	var node = self.data[pos]
 
@@ -38,7 +38,7 @@ func _up():
 
 	self.data[pos] = node
 
-func _down():
+func _down() -> void:
 	var pos = 0
 	var mid = self.data.size() >> 1
 	var node = self.data[pos]
@@ -58,5 +58,5 @@ func _down():
 
 	self.data[pos] = node
 
-func _compare(item1, item2):
+func _compare(item1, item2) -> float:
 	return item1["priority"] - item2["priority"]

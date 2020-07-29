@@ -11,10 +11,15 @@ export var cell_height = 1
 
 export var debug = false
 
+onready var debug_geom: = $ImmediateGeometry
+onready var rooms: = $Rooms
+onready var siderooms: = $Siderooms
+onready var corridors: = $Corridors
+
 func _ready():
 	make_cells()
 
-func make_cells():
+func make_cells() -> void:
 	var dungeon_generator = DungeonGenerator.new(
 		num_cells,
 		cell_size_mean,
@@ -31,36 +36,36 @@ func make_cells():
 		cell.set_position(cell.transform.origin * tile_size)
 
 		if cell.is_room():
-			$Rooms.add_child(cell)
+			self.rooms.add_child(cell)
 		if cell.is_sideroom():
-			$Siderooms.add_child(cell)
+			self.siderooms.add_child(cell)
 		if cell.is_corridor():
-			$Corridors.add_child(cell)
+			self.corridors.add_child(cell)
 
-	$ImmediateGeometry.clear()
+	self.debug_geom.clear()
 
 	if self.debug:
 		for cell in cells:
 			draw_cell(cell)
 
-	yield(get_tree(), "idle_frame")
-	for i in range(cells.size() - 1):
-		for j in range(i + 1, cells.size()):
-			if cells[i].rect.intersects(cells[j].rect):
-				print("Warning: cells ", cells[i].id, " and ", cells[j].id, " overlap")
-				draw_cell(cells[i])
-				draw_cell(cells[j])
+		yield(get_tree(), "idle_frame")
+		for i in range(cells.size() - 1):
+			for j in range(i + 1, cells.size()):
+				if cells[i].rect.intersects(cells[j].rect):
+					print("Warning: cells ", cells[i].id, " and ", cells[j].id, " overlap")
+					draw_cell(cells[i])
+					draw_cell(cells[j])
 
-func draw_cell(cell):
-	$ImmediateGeometry.begin(Mesh.PRIMITIVE_LINE_LOOP)
+func draw_cell(cell) -> void:
+	self.debug_geom.begin(Mesh.PRIMITIVE_LINE_LOOP)
 	if cell.is_typeless():
-		$ImmediateGeometry.set_color(Color(0, 0, 0))
+		self.debug_geom.set_color(Color(0, 0, 0))
 	if cell.is_room():
-		$ImmediateGeometry.set_color(Color(0.5, 0, 0))
+		self.debug_geom.set_color(Color(0.5, 0, 0))
 	if cell.is_sideroom():
-		$ImmediateGeometry.set_color(Color(0.2, 0.2, 0.5))
+		self.debug_geom.set_color(Color(0.2, 0.2, 0.5))
 	if cell.is_corridor():
-		$ImmediateGeometry.set_color(Color(0, 0, 0.5))
+		self.debug_geom.set_color(Color(0, 0, 0.5))
 
 	var y = cell_height * tile_size
 
@@ -69,16 +74,19 @@ func draw_cell(cell):
 	var p3 = Vector3(cell.rect.end.x, y, cell.rect.end.y)
 	var p4 = Vector3(cell.rect.position.x, y, cell.rect.end.y)
 
-	$ImmediateGeometry.add_vertex(p1)
-	$ImmediateGeometry.add_vertex(p2)
-	$ImmediateGeometry.add_vertex(p3)
-	$ImmediateGeometry.add_vertex(p4)
-	$ImmediateGeometry.add_vertex(p1)
-	$ImmediateGeometry.end()
+	self.debug_geom.add_vertex(p1)
+	self.debug_geom.add_vertex(p2)
+	self.debug_geom.add_vertex(p3)
+	self.debug_geom.add_vertex(p4)
+	self.debug_geom.add_vertex(p1)
+	self.debug_geom.end()
 
 func _input(event):
 	if event.is_action_pressed('ui_select'):
-		for n in $Rooms.get_children() + $Siderooms.get_children() + $Corridors.get_children():
+		var room_objs = self.rooms.get_children()
+		var sideroom_objs = self.siderooms.get_children()
+		var corridor_objs = self.corridors.get_children()
+		for n in room_objs + sideroom_objs + corridor_objs:
 			n.queue_free()
 
 		# Wait one frame for cells to be cleared from tree

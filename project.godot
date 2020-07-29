@@ -52,6 +52,10 @@ config/icon="res://icon.png"
 
 DungeonVariables="*res://dungeon/variables.gd"
 
+[editor_plugins]
+
+enabled=PoolStringArray( "gut" )
+
 [input]
 
 up={
