@@ -1,9 +1,11 @@
 extends Node
 
-const CELL_TYPE_NONE = 0
-const CELL_TYPE_ROOM = 1
-const CELL_TYPE_SIDEROOM = 2
-const CELL_TYPE_CORRIDOR = 3
+enum CellType {
+	NONE = 0,
+	ROOM = 1,
+	SIDEROOM = 2,
+	CORRIDOR = 3
+}
 
 const CELL_MATERIALS = [
 	null,

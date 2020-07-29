@@ -4,18 +4,18 @@ var edges = {}
 var edge_weights = {}
 var nodes = []
 
-func add_node(node):
+func add_node(node: int) -> void:
 	self.nodes.append(node)
 	self.edges[node] = []
 	self.edge_weights[node] = []
 
-func add_edge(node1, node2, weight = 0):
+func add_edge(node1: int, node2: int, weight: float = 0) -> void:
 	self.edges[node1].append(node2)
 	self.edges[node2].append(node1)
 	self.edge_weights[node1].append(weight)
 	self.edge_weights[node2].append(weight)
 
-func mst():
+func mst() -> Graph:
 	var graph = get_script().new()
 
 	if (self.nodes.size() == 0):
