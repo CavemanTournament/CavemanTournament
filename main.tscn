@@ -11,6 +11,7 @@ script = ExtResource( 1 )
 tile_size = 1.0
 num_cells = 200
 min_room_size = 16
+debug_separation = true
 
 [node name="Rooms" type="Node" parent="."]
 

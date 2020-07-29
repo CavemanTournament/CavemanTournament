@@ -12,6 +12,8 @@ var min_room_size: int # Turn all cells at least this big into rooms
 var corridor_width: int
 var cell_height: int
 
+var fast_separation: bool # Use separation with better performance but worse quality
+
 var rng: RandomNumberGenerator
 var cells: Dictionary
 
@@ -24,7 +26,8 @@ func _init(
 	_cell_position_range: int,
 	_min_room_size: int,
 	_corridor_width: int,
-	_cell_height: int
+	_cell_height: int,
+	_fast_separation: bool
 ):
 	self.num_cells = _num_cells
 	self.cell_size_mean = _cell_size_mean
@@ -33,12 +36,13 @@ func _init(
 	self.min_room_size = _min_room_size
 	self.corridor_width = _corridor_width
 	self.cell_height = _cell_height
+	self.fast_separation = _fast_separation
 
 	self.rng = RandomNumberGenerator.new()
 	self.rng.randomize()
 
 
-func generate():
+func generate(debug_separation: = false):
 	self.cells = {}
 	self.next_cell_id = 0
 
@@ -48,26 +52,30 @@ func generate():
 		self.cells[cell.id] = cell
 
 		# Set cell type to room if it's big enough
-		if cell.rect.size.x >= min_room_size:
+		if cell.rect.size.x >= min_room_size || debug_separation:
 			cell.set_type(DungeonVariables.CellType.ROOM)
 
-	separate_cells()
+	if self.fast_separation:
+		separate_cells_fast()
+	else:
+		separate_cells()
 
-	# Get a graph of linked rooms
-	var room_graph: = get_room_graph()
-	var link_paths: = []
+	if !debug_separation:
+		# Get a graph of linked rooms
+		var room_graph: = get_room_graph()
+		var link_paths: = []
 
-	for cell1_id in room_graph.nodes:
-		for cell2_id in room_graph.edges[cell1_id]:
-			link_paths.append(get_cell_link_path(cell1_id, cell2_id))
+		for cell1_id in room_graph.nodes:
+			for cell2_id in room_graph.edges[cell1_id]:
+				link_paths.append(get_cell_link_path(cell1_id, cell2_id))
 
-	# Add siderooms between linked rooms
-	for path in link_paths:
-		create_siderooms(path)
+		# Add siderooms between linked rooms
+		for path in link_paths:
+			create_siderooms(path)
 
-	# Add corridors between linked rooms
-	for path in link_paths:
-		create_corridors(path, corridor_width)
+		# Add corridors between linked rooms
+		for path in link_paths:
+			create_corridors(path, corridor_width)
 
 	# Return rooms, siderooms and corridors
 	var assigned_cells: = []
@@ -339,9 +347,43 @@ func separate_cells():
 					cells[cell1_id].set_position(o2)
 					tree.update(cell1_id, cells[cell1_id].rect)
 
-func get_overlapping_cell(cell1: DungeonCell) -> DungeonCell:
-	for cell2 in self.cells.values():
-		if cell1.id != cell2.id && cell1.rect.intersects(cell2.rect):
+func separate_cells_fast():
+	var separated = []
+
+	for cell1 in self.cells.values():
+		var dir: Vector3 = cell1.transform.origin.normalized()
+		var angle: = dir.angle_to(Vector3.RIGHT)
+
+		while true:
+			var cell2: = get_overlapping_cell(cell1, separated)
+
+			if !cell2:
+				break
+
+			var cell1_corner: = Vector3.ZERO
+			cell1_corner.x = cell1.rect.end.x if dir.x <= 0 else cell1.rect.position.x
+			cell1_corner.z = cell1.rect.end.y if dir.z <= 0 else cell1.rect.position.y
+
+			var cell2_corner: = Vector3.ZERO
+			cell2_corner.x = cell2.rect.position.x if dir.x <= 0 else cell2.rect.end.x
+			cell2_corner.z = cell2.rect.position.y if dir.z <= 0 else cell2.rect.end.y
+
+			var dist_horizontal: = cell2_corner.x - cell1_corner.x
+			var dist_vertical: = cell2_corner.z - cell1_corner.z
+
+			var delta1: = Vector3(tan(angle) * dist_vertical, 0, dist_vertical)
+			var delta2: = Vector3(dist_horizontal, 0, tan(angle - PI / 2) * dist_horizontal)
+			var delta = delta1 if delta1.length() < delta2.length() else delta2
+
+			assert(delta.length() > 0)
+
+			cell1.move(delta.round())
+
+		separated.append(cell1)
+
+func get_overlapping_cell(cell1: DungeonCell, cell_arr: Array) -> DungeonCell:
+	for cell2 in cell_arr:
+		if cell1.rect.intersects(cell2.rect):
 			return cell2
 	return null
 

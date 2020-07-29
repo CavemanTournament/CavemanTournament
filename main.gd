@@ -1,15 +1,17 @@
 extends Spatial
 
-export var tile_size = 8.0
-export var num_cells = 100
-export var cell_size_mean = 10
-export var cell_size_deviation = 4
-export var cell_position_range = 40
-export var min_room_size = 10
-export var corridor_width = 3
-export var cell_height = 1
+export var tile_size: = 8.0
+export var num_cells: = 100
+export var cell_size_mean: = 10
+export var cell_size_deviation: = 4
+export var cell_position_range: = 40
+export var min_room_size: = 10
+export var corridor_width: = 3
+export var cell_height: = 1
+export var fast_separation: = false
 
 export var debug = false
+export var debug_separation = false
 
 onready var debug_geom: = $ImmediateGeometry
 onready var rooms: = $Rooms
@@ -21,19 +23,20 @@ func _ready():
 
 func make_cells() -> void:
 	var dungeon_generator = DungeonGenerator.new(
-		num_cells,
-		cell_size_mean,
-		cell_size_deviation,
-		cell_position_range,
-		min_room_size,
-		corridor_width,
-		cell_height
+		self.num_cells,
+		self.cell_size_mean,
+		self.cell_size_deviation,
+		self.cell_position_range,
+		self.min_room_size,
+		self.corridor_width,
+		self.cell_height,
+		self.fast_separation
 	)
-	var cells = dungeon_generator.generate()
+	var cells = dungeon_generator.generate(self.debug_separation)
 
 	for cell in cells:
-		cell.set_size(cell.get_size() * tile_size)
-		cell.set_position(cell.transform.origin * tile_size)
+		cell.set_size(cell.get_size() * self.tile_size)
+		cell.set_position(cell.transform.origin * self.tile_size)
 
 		if cell.is_room():
 			self.rooms.add_child(cell)
