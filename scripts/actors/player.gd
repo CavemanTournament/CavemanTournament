@@ -4,15 +4,14 @@ class_name Player
 export (int) var speed = 20
 export (int) var gravity = 20
 
+onready var model: Spatial = get_node("Model")
+var velocity := Vector3()
 const DEAD_ZONE := 0.15
 const use_keyboard := true
 
 onready var PlayerCamera = preload("res://scenes/actors/player_camera.tscn")
 onready var weapon_hand: Spatial = get_node("Model/Weapon_Slot")
 var items = []
-
-var velocity := Vector3()
-
 
 func _ready():
 	health = 1000
