@@ -45,12 +45,13 @@ func generate():
 	# Generate randomly sized and positioned cells, and separate them
 	for _i in range(num_cells):
 		var cell = generate_random_cell()
-		separate_cell(cell)
 		self.cells[cell.id] = cell
 
 		# Set cell type to room if it's big enough
 		if cell.rect.size.x >= min_room_size:
 			cell.set_type(DungeonVariables.CELL_TYPE_ROOM)
+
+	separate_cells()
 
 	# Get a graph of linked rooms
 	var room_graph = get_room_graph()
@@ -76,6 +77,18 @@ func generate():
 			assigned_cells.append(cell)
 
 	return assigned_cells
+
+func sort_cells(cell1, cell2):
+	var overlaps1 = 0
+	var overlaps2 = 0
+
+	for cell in cells.values():
+		if cell.id != cell1.id && cell.rect.intersects(cell1.rect):
+			overlaps1 += 1
+		if cell.id != cell2.id && cell.rect.intersects(cell2.rect):
+			overlaps2 += 1
+
+	return overlaps1 - overlaps2
 
 func get_unused_cell_id():
 	var id = self.next_cell_id
@@ -176,16 +189,6 @@ func generate_random_cell():
 	cell.move(Vector3(cell_pos.x, 0, cell_pos.y))
 
 	return cell
-
-func separate_cell(cell):
-	var cell_placement_dir = cell.transform.origin.normalized()
-
-	while true:
-		var overlapping_cell = get_overlapping_cell(cell)
-		if !overlapping_cell:
-			break
-
-		separate_cells(cell, overlapping_cell, cell_placement_dir)
 
 func delaunay_triangulate_cells(_cells: Array):
 	var points = PoolVector2Array()
@@ -306,36 +309,36 @@ func get_cell_link_path(cell1_id, cell2_id):
 
 	return path
 
-func separate_cells(cell1, cell2, dir):
-	var angle = dir.angle_to(Vector3.RIGHT)
+func separate_cells():
+	var tree = RTree.new()
+	for id in self.cells:
+		tree.insert(id, cells[id].rect)
 
-	var cell1_corner = Vector3.ZERO
-	var cell2_corner = Vector3.ZERO
+	var ticks = 0
+	var overlaps = true
+	while overlaps && ticks < 200:
+		overlaps = false
+		for cell1_id in self.cells:
 
-	if dir.x <= 0:
-		cell1_corner.x = cell1.rect.end.x
-		cell2_corner.x = cell2.rect.position.x
-	else:
-		cell1_corner.x = cell1.rect.position.x
-		cell2_corner.x = cell2.rect.end.x
+			var v = Vector3.ZERO
+			var overlapping_cells = tree.find_overlapping(cells[cell1_id].rect)
 
-	if dir.z <= 0:
-		cell1_corner.z = cell1.rect.end.y
-		cell2_corner.z = cell2.rect.position.y
-	else:
-		cell1_corner.z = cell1.rect.position.y
-		cell2_corner.z = cell2.rect.end.y
+			for cell2_id in overlapping_cells:
+				if cell1_id != cell2_id:
+					overlaps = true
+					v += cells[cell2_id].transform.origin - cells[cell1_id].transform.origin
 
-	var dist_horizontal = cell2_corner.x - cell1_corner.x
-	var dist_vertical = cell2_corner.z - cell1_corner.z
-
-	var delta1 = Vector3(tan(angle) * dist_vertical, 0, dist_vertical).round()
-	var delta2 = Vector3(dist_horizontal, 0, tan(angle - PI / 2) * dist_horizontal).round()
-
-	if delta1.length() < delta2.length():
-		cell1.move(delta1)
-	else:
-		cell1.move(delta2)
+			if overlapping_cells.size() > 1:
+				v = v.normalized()
+				v *= -1
+				cells[cell1_id].move(v)
+				tree.update(cell1_id, cells[cell1_id].rect)
+			else:
+				var o1 = cells[cell1_id].transform.origin
+				var o2 = o1.snapped(Vector3(1, 1, 1))
+				if o1 != o2:
+					cells[cell1_id].set_position(o2)
+					tree.update(cell1_id, cells[cell1_id].rect)
 
 func get_overlapping_cell(cell1):
 	for cell2 in self.cells.values():
