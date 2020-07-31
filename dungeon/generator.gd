@@ -60,6 +60,8 @@ func generate(debug_separation: = false):
 	else:
 		separate_cells()
 
+	remove_overlapping_cells()
+
 	if !debug_separation:
 		# Get a graph of linked rooms
 		var room_graph: = get_room_graph()
@@ -85,17 +87,16 @@ func generate(debug_separation: = false):
 
 	return assigned_cells
 
-func sort_cells(cell1, cell2):
-	var overlaps1 = 0
-	var overlaps2 = 0
+func remove_overlapping_cells():
+	var overlaps = true
+	while overlaps:
+		overlaps = false
+		for cell1 in self.cells.values():
+			if get_overlapping_cell(cell1, self.cells.values()):
+				self.cells.erase(cell1.id)
+				overlaps = true
+				break
 
-	for cell in cells.values():
-		if cell.id != cell1.id && cell.rect.intersects(cell1.rect):
-			overlaps1 += 1
-		if cell.id != cell2.id && cell.rect.intersects(cell2.rect):
-			overlaps2 += 1
-
-	return overlaps1 - overlaps2
 
 func get_unused_cell_id():
 	var id: = self.next_cell_id
@@ -115,6 +116,9 @@ func create_corridors(path: Array, path_width: int) -> DungeonCell:
 		var p2: Vector3 = path[point_idx + 1]
 
 		assert(p1.x == p2.x || p1.z == p2.z) # Straight lines only
+
+		if p1 == p2:
+			continue
 
 		var pos = p1
 
@@ -185,6 +189,9 @@ func generate_random_cell() -> DungeonCell:
 	var cell_size_ratio: = rng.randf_range(0.5, 1.5)
 	var cell_width: = round(cell_size_base)
 	var cell_length: = round(cell_size_base * cell_size_ratio)
+
+	cell_width = max(corridor_width + 2, cell_width)
+	cell_length = max(corridor_width + 2, cell_length)
 
 	# Making all cell dimensions odd makes positioning them in a grid easier
 	cell_width += 1 - fmod(cell_width, 2)
@@ -323,29 +330,39 @@ func separate_cells():
 
 	var ticks = 0
 	var overlaps = true
+
 	while overlaps && ticks < 200:
 		overlaps = false
-		for cell1_id in self.cells:
+		for cell1 in self.cells.values():
 
 			var v = Vector3.ZERO
-			var overlapping_cells = tree.find_overlapping(cells[cell1_id].rect)
+			var overlapping_cells = tree.find_overlapping(cell1.rect)
 
 			for cell2_id in overlapping_cells:
-				if cell1_id != cell2_id:
-					overlaps = true
-					v += cells[cell2_id].transform.origin - cells[cell1_id].transform.origin
+				if cell1.id != cell2_id:
+					var delta = cells[cell2_id].transform.origin - cell1.transform.origin
+					# Close rectangles should affect movement more than far away rectangles
+					var inv_sqr = 5.0 / (delta.length_squared() + 0.01)
+					v += delta * inv_sqr
 
 			if overlapping_cells.size() > 1:
-				v = v.normalized()
 				v *= -1
-				cells[cell1_id].move(v)
-				tree.update(cell1_id, cells[cell1_id].rect)
+
+				if v.length() < 0.25:
+					v = v.normalized() * 0.25
+				if v.length() > 2:
+					v = v.normalized() * 2
+
+				cell1.move(v)
+				tree.update(cell1.id, cell1.rect)
+				overlaps = true
 			else:
-				var o1 = cells[cell1_id].transform.origin
-				var o2 = o1.snapped(Vector3(1, 1, 1))
-				if o1 != o2:
-					cells[cell1_id].set_position(o2)
-					tree.update(cell1_id, cells[cell1_id].rect)
+				var snapped = cell1.transform.origin.snapped(Vector3(1, 1, 1))
+				if cell1.transform.origin != snapped:
+					cell1.set_position(snapped)
+					tree.update(cell1.id, cell1.rect)
+
+		ticks += 1
 
 func separate_cells_fast():
 	var separated = []
@@ -383,7 +400,7 @@ func separate_cells_fast():
 
 func get_overlapping_cell(cell1: DungeonCell, cell_arr: Array) -> DungeonCell:
 	for cell2 in cell_arr:
-		if cell1.rect.intersects(cell2.rect):
+		if cell1.id != cell2.id && cell1.rect.intersects(cell2.rect):
 			return cell2
 	return null
 

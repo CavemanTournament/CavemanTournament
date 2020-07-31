@@ -9,9 +9,10 @@ vertex_color_use_as_albedo = true
 [node name="Main" type="Spatial"]
 script = ExtResource( 1 )
 tile_size = 1.0
-num_cells = 200
+num_cells = 150
+cell_position_range = 10
 min_room_size = 16
-debug_separation = true
+corridor_width = 5
 
 [node name="Rooms" type="Node" parent="."]
 
@@ -20,7 +21,7 @@ debug_separation = true
 [node name="Corridors" type="Node" parent="."]
 
 [node name="Camera" type="Camera" parent="."]
-transform = Transform( 1, 0, 0, 0, -1.62921e-07, 1, 0, -1, -1.62921e-07, 0, 100, 0 )
+transform = Transform( 1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 94.6062, 0 )
 projection = 1
 fov = 90.7
 size = 500.01
