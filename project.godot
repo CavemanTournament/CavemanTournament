@@ -9,6 +9,11 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "Reference",
+"class": "Dungeon",
+"language": "GDScript",
+"path": "res://dungeon/dungeon.gd"
+}, {
 "base": "RigidBody",
 "class": "DungeonCell",
 "language": "GDScript",
@@ -40,6 +45,7 @@ _global_script_classes=[ {
 "path": "res://scripts/util.gd"
 } ]
 _global_script_class_icons={
+"Dungeon": "",
 "DungeonCell": "",
 "DungeonGenerator": "",
 "Graph": "",

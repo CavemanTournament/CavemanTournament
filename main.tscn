@@ -12,7 +12,6 @@ tile_size = 1.0
 num_cells = 150
 cell_position_range = 10
 min_room_size = 16
-corridor_width = 5
 
 [node name="Rooms" type="Node" parent="."]
 
@@ -24,7 +23,7 @@ corridor_width = 5
 transform = Transform( 1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 94.6062, 0 )
 projection = 1
 fov = 90.7
-size = 500.01
+size = 200.0
 near = 0.1
 far = 687.3
 

@@ -32,9 +32,9 @@ func make_cells() -> void:
 		self.cell_height,
 		self.fast_separation
 	)
-	var cells = dungeon_generator.generate(self.debug_separation)
+	var dungeon = dungeon_generator.generate(self.debug_separation)
 
-	for cell in cells:
+	for cell in dungeon.get_cells():
 		cell.set_size(cell.get_size() * self.tile_size)
 		cell.set_position(cell.transform.origin * self.tile_size)
 
@@ -48,16 +48,8 @@ func make_cells() -> void:
 	self.debug_geom.clear()
 
 	if self.debug:
-		for cell in cells:
+		for cell in dungeon.get_cells():
 			draw_cell(cell)
-
-		yield(get_tree(), "idle_frame")
-		for i in range(cells.size() - 1):
-			for j in range(i + 1, cells.size()):
-				if cells[i].rect.intersects(cells[j].rect):
-					print("Warning: cells ", cells[i].id, " and ", cells[j].id, " overlap")
-					draw_cell(cells[i])
-					draw_cell(cells[j])
 
 func draw_cell(cell) -> void:
 	self.debug_geom.begin(Mesh.PRIMITIVE_LINE_LOOP)

@@ -9,7 +9,7 @@ func _init(_max_children: int = 9):
 	self.max_children = _max_children
 	self.nodes = {}
 
-func find_overlapping(rect: Rect2, include_borders: bool = false) -> Array:
+func query_rect2(rect: Rect2, include_borders: bool = false) -> Array:
 	var overlapping: = []
 	var stack: = [root]
 	while stack.size() > 0:
@@ -24,24 +24,91 @@ func find_overlapping(rect: Rect2, include_borders: bool = false) -> Array:
 
 	return overlapping
 
+func query_point(point: Vector2) -> Array:
+	var overlapping: = []
+	var stack: = [root]
+	while stack.size() > 0:
+		var node: RTreeNode = stack.pop_back()
+
+		for child in node.children:
+			if child.mbr.has_point(point):
+				if child.is_leaf():
+					overlapping.append(child.id)
+				else:
+					stack.append(child)
+
+	return overlapping
+
+func query_segment(from: Vector2, to: Vector2, segment_width: = 1) -> Array:
+	var overlapping: = []
+	var stack: = [root]
+	while stack.size() > 0:
+		var node: RTreeNode = stack.pop_back()
+
+		for child in node.children:
+			if Util.segment_intersects_rect2(from, to, child.mbr, segment_width):
+				if child.is_leaf():
+					overlapping.append(child.id)
+				else:
+					stack.append(child)
+
+	return overlapping
+
 func update(id: int, mbr: Rect2) -> void:
-	assert(nodes.has(id))
-	nodes[id].update_mbr(mbr)
+	assert(self.nodes.has(id))
+	self.nodes[id].update_mbr(mbr)
 
-func insert(id: int, mbr: Rect2, node: RTreeNode = self.root) -> void:
+func remove(id: int) -> void:
+	assert(self.nodes.has(id))
+	var node: RTreeNode = self.nodes[id]
+	var parent: = node.parent
+
+	parent.remove(node)
+	self.nodes.erase(id)
+
+	if parent.children.size() < ceil(0.4 * self.max_children):
+		_handle_underflow(parent)
+
+func insert(id: int, mbr: Rect2) -> void:
+	assert(!self.nodes.has(id))
+	var new_node: = RTreeNode.new(id, mbr)
+	self.nodes[id] = new_node
+
+	_insert_node(new_node)
+
+func _insert_node(new_node: RTreeNode, node: RTreeNode = self.root) -> void:
 	if node.is_leaf():
-		assert(!self.nodes.has(id))
-
 		var parent: = node if node == root else node.parent
-		var new_node: = RTreeNode.new(id, mbr)
 		parent.insert(new_node)
-		self.nodes[id] = new_node
 
-		if parent.children.size() > max_children:
+		if parent.children.size() > self.max_children:
 			_handle_overflow(parent)
 	else:
-		var n = _choose_subtree(mbr, node)
-		insert(id, mbr, n)
+		var n = _choose_subtree(new_node.mbr, node)
+		_insert_node(new_node, n)
+
+func _handle_underflow(node: RTreeNode) -> void:
+	var leaves: = []
+	var queue: = [node]
+	while queue.size() > 0:
+		var current_node: RTreeNode = queue.pop_back()
+		for child in current_node.children:
+			if child.is_leaf():
+				leaves.append(child)
+			else:
+				queue.append(child)
+
+	if node != self.root:
+		var parent = node.parent
+		parent.remove(node)
+
+		for leaf in leaves:
+			_insert_node(leaf)
+
+		if parent.children.size() < ceil(0.4 * self.max_children):
+			_handle_underflow(parent)
+	elif self.root.children.size() == 1:
+		self.root = node.children[0]
 
 func _handle_overflow(node: RTreeNode) -> void:
 	var split: = _split_node(node)
@@ -49,17 +116,22 @@ func _handle_overflow(node: RTreeNode) -> void:
 	new_nodes[0].insert_all(node.children.slice(0, split))
 	new_nodes[1].insert_all(node.children.slice(split + 1, node.children.size() - 1))
 
-	if node == root:
+	assert(new_nodes[0].children.size() > 0)
+	assert(new_nodes[1].children.size() > 0)
+
+	if node == self.root:
 		var new_root: = RTreeNode.new()
 		new_root.insert_all(new_nodes)
 
-		root = new_root
+		self.root = new_root
 	else:
 		var parent: = node.parent
 		parent.remove(node)
 		parent.insert_all(new_nodes)
 
-		if parent.children.size() > max_children:
+		assert(parent.children.size() > 0)
+
+		if parent.children.size() > self.max_children:
 			_handle_overflow(parent)
 
 func _choose_subtree(mbr: Rect2, node: RTreeNode = self.root) -> RTreeNode:
@@ -173,7 +245,9 @@ class RTreeNode:
 
 		var idx = self.children.find(node)
 		assert(idx != -1)
-		children.remove(idx)
+
+		self.children.remove(idx)
+		node.parent = null
 
 		_update_mbr()
 
