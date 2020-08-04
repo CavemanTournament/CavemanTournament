@@ -12,10 +12,11 @@ var min_room_size: int # Turn all cells at least this big into rooms
 var corridor_width: int
 var cell_height: int
 
-var rng: RandomNumberGenerator
-var cells: Dictionary
+var fast_separation: bool # Use separation with better performance but worse quality
 
-var next_cell_id: = 0
+var rng: RandomNumberGenerator
+
+var dungeon: Dungeon
 
 func _init(
 	_num_cells: int,
@@ -24,7 +25,8 @@ func _init(
 	_cell_position_range: int,
 	_min_room_size: int,
 	_corridor_width: int,
-	_cell_height: int
+	_cell_height: int,
+	_fast_separation: bool
 ):
 	self.num_cells = _num_cells
 	self.cell_size_mean = _cell_size_mean
@@ -33,57 +35,62 @@ func _init(
 	self.min_room_size = _min_room_size
 	self.corridor_width = _corridor_width
 	self.cell_height = _cell_height
+	self.fast_separation = _fast_separation
+
+	self.dungeon = Dungeon.new()
 
 	self.rng = RandomNumberGenerator.new()
 	self.rng.randomize()
 
-
-func generate():
-	self.cells = {}
-	self.next_cell_id = 0
-
+func generate(debug_separation: = false) -> Dungeon:
 	# Generate randomly sized and positioned cells, and separate them
 	for _i in range(num_cells):
 		var cell: = generate_random_cell()
-		separate_cell(cell)
-		self.cells[cell.id] = cell
 
 		# Set cell type to room if it's big enough
-		if cell.rect.size.x >= min_room_size:
+		if cell.rect.size.x >= min_room_size || debug_separation:
 			cell.set_type(DungeonVariables.CellType.ROOM)
 
-	# Get a graph of linked rooms
-	var room_graph: = get_room_graph()
-	var link_paths: = []
+	if self.fast_separation:
+		separate_cells_fast()
+	else:
+		separate_cells()
 
-	for cell1_id in room_graph.nodes:
-		for cell2_id in room_graph.edges[cell1_id]:
-			link_paths.append(get_cell_link_path(cell1_id, cell2_id))
+	remove_overlapping_cells()
 
-	# Add siderooms between linked rooms
-	for path in link_paths:
-		create_siderooms(path)
+	if !debug_separation:
+		# Get a graph of linked rooms
+		var room_graph: = get_room_graph()
+		var link_paths: = []
 
-	# Add corridors between linked rooms
-	for path in link_paths:
-		create_corridors(path, corridor_width)
+		for cell1_id in room_graph.nodes:
+			for cell2_id in room_graph.edges[cell1_id]:
+				link_paths.append(get_cell_link_path(cell1_id, cell2_id))
 
-	# Return rooms, siderooms and corridors
-	var assigned_cells: = []
-	for cell in self.cells.values():
-		if !cell.is_typeless():
-			assigned_cells.append(cell)
+		# Add siderooms between linked rooms
+		for path in link_paths:
+			create_siderooms(path)
 
-	return assigned_cells
+		# Add corridors between linked rooms
+		for path in link_paths:
+			create_corridors(path, corridor_width)
 
-func get_unused_cell_id():
-	var id: = self.next_cell_id
-	self.next_cell_id += 1
-	return id
+	return self.dungeon
+
+func remove_overlapping_cells():
+	var overlaps = true
+	while overlaps:
+		overlaps = false
+		for cell1 in self.dungeon.get_cells():
+			if self.dungeon.cells_overlapping_cell(cell1.id).size() > 1:
+				self.dungeon.remove_cell(cell1.id)
+				overlaps = true
+				break
 
 func create_siderooms(path: Array):
-	for cell in self.cells.values():
-		if cell.is_typeless() && path_overlaps_cell(path, cell, corridor_width):
+	for id in self.dungeon.cells_overlapping_path(path, self.corridor_width):
+		var cell: = self.dungeon.get_cell(id)
+		if cell.is_typeless():
 			cell.set_type(DungeonVariables.CellType.SIDEROOM)
 
 func create_corridors(path: Array, path_width: int) -> DungeonCell:
@@ -94,6 +101,10 @@ func create_corridors(path: Array, path_width: int) -> DungeonCell:
 		var p2: Vector3 = path[point_idx + 1]
 
 		assert(p1.x == p2.x || p1.z == p2.z) # Straight lines only
+
+		if p1 == p2:
+			# No need to add corridors when the segment has zero length
+			continue
 
 		var pos = p1
 
@@ -108,20 +119,23 @@ func create_corridors(path: Array, path_width: int) -> DungeonCell:
 				# When `width_range` is 0, we only consider the current position
 				# for the corridor. We're not adding more to the sides.
 
-				var overlapping_cell: = get_cell_at(pos, false)
+				var overlapping = false
+				for id in self.dungeon.cells_overlapping_point(pos):
+					if !self.dungeon.get_cell(id).is_typeless():
+						overlapping = true
+						break
 
 				# Add corridor cell at current position if the position is unoccupied
-				if !overlapping_cell:
-					var corridor: = DungeonCell.new(get_unused_cell_id())
-					corridor.set_size(Vector3(1, cell_height, 1))
-					corridor.set_position(pos)
-					corridor.set_type(DungeonVariables.CellType.CORRIDOR)
+				if !overlapping:
+					var size = Vector3(1, cell_height, 1)
+					var rect = Rect2(pos.x - (size.x / 2), pos.z - (size.z / 2), size.x, size.z)
 
 					# Merge new corridor with previous one if possible to reduce
 					# resulting game objects
-					if !prev_corridor || !prev_corridor.merge(corridor):
+					if !prev_corridor || !self.dungeon.merge_cell(prev_corridor.id, rect):
+						var corridor = self.dungeon.add_cell(pos, size)
+						corridor.set_type(DungeonVariables.CellType.CORRIDOR)
 						prev_corridor = corridor
-						self.cells[corridor.id] = corridor
 			else:
 				# We want a corridor with extra width. We figure out the extents
 				# of the corridor, and then create a path that follows the corridor
@@ -145,8 +159,8 @@ func create_corridors(path: Array, path_width: int) -> DungeonCell:
 
 				# Merge new wide corridor with previous one if possible to
 				# reduce resulting game objects
-				if prev_corridor && prev_corridor.merge(corridor):
-					self.cells.erase(corridor.id)
+				if prev_corridor && corridor && self.dungeon.merge_cell(prev_corridor.id, corridor.rect):
+					self.dungeon.remove_cell(corridor.id)
 				else:
 					prev_corridor = corridor
 
@@ -158,44 +172,35 @@ func create_corridors(path: Array, path_width: int) -> DungeonCell:
 	return prev_corridor
 
 func generate_random_cell() -> DungeonCell:
-	var cell: = DungeonCell.new(get_unused_cell_id())
-
 	var cell_size_base: = rng.randfn(cell_size_mean, cell_size_deviation)
 	var cell_size_ratio: = rng.randf_range(0.5, 1.5)
 	var cell_width: = round(cell_size_base)
 	var cell_length: = round(cell_size_base * cell_size_ratio)
 
+	cell_width = max(corridor_width + 2, cell_width)
+	cell_length = max(corridor_width + 2, cell_length)
+
 	# Making all cell dimensions odd makes positioning them in a grid easier
 	cell_width += 1 - fmod(cell_width, 2)
 	cell_length += 1 - fmod(cell_length, 2)
 
-	cell.set_size(Vector3(cell_width, cell_height, cell_length))
+	var pos2d: = Util.random_point_in_circle(self.cell_position_range).round()
 
-	var cell_pos: = Util.random_point_in_circle(self.cell_position_range).round()
-	cell.move(Vector3(cell_pos.x, 0, cell_pos.y))
+	var pos: = Vector3(pos2d.x, 0, pos2d.y)
+	var size: = Vector3(cell_width, cell_height, cell_length)
 
-	return cell
+	return self.dungeon.add_cell(pos, size)
 
-func separate_cell(cell: DungeonCell):
-	var cell_placement_dir: = cell.transform.origin.normalized()
-
-	while true:
-		var overlapping_cell: = get_overlapping_cell(cell)
-		if !overlapping_cell:
-			break
-
-		separate_cells(cell, overlapping_cell, cell_placement_dir)
-
-func delaunay_triangulate_cells(_cells: Array) -> Array:
+func delaunay_triangulate_cells(cells: Array) -> Array:
 	var points: = PoolVector2Array()
-	for cell in _cells:
+	for cell in cells:
 		points.append(Vector2(cell.transform.origin.x, cell.transform.origin.z))
 
 	var triangulated_indices: = Geometry.triangulate_delaunay_2d(points)
 
 	var triangulated_cells: = []
 	for idx in triangulated_indices:
-		triangulated_cells.append(_cells[idx])
+		triangulated_cells.append(cells[idx])
 
 	return triangulated_cells
 
@@ -203,7 +208,7 @@ func get_room_graph() -> Graph:
 	var rooms: = []
 	var room_graph: = Graph.new()
 
-	for cell in self.cells.values():
+	for cell in self.dungeon.get_cells():
 		if cell.is_room():
 			rooms.append(cell)
 			room_graph.add_node(cell.id)
@@ -241,8 +246,8 @@ func get_room_graph() -> Graph:
 func get_cell_link_path(cell1_id, cell2_id):
 	var path: = []
 
-	var cell1: DungeonCell = self.cells[cell1_id]
-	var cell2: DungeonCell = self.cells[cell2_id]
+	var cell1: DungeonCell = self.dungeon.get_cell(cell1_id)
+	var cell2: DungeonCell = self.dungeon.get_cell(cell2_id)
 
 	var x1: = max(cell1.rect.position.x, cell2.rect.position.x)
 	var x2: = min(cell1.rect.end.x, cell2.rect.end.x)
@@ -294,69 +299,92 @@ func get_cell_link_path(cell1_id, cell2_id):
 		var temp_path2_overlaps: = 0
 
 		# We can't always avoid overlaps, but we want to at least minimize them
-		for cell in self.cells.values():
-			if cell.is_room():
-				if path_overlaps_cell(temp_path1, cell):
-					temp_path1_overlaps += 1
-				if path_overlaps_cell(temp_path2, cell):
-					temp_path2_overlaps += 1
+		for id in self.dungeon.cells_overlapping_path(temp_path1, self.corridor_width):
+			if self.dungeon.get_cell(id).is_room():
+				temp_path1_overlaps += 1
+		for id in self.dungeon.cells_overlapping_path(temp_path2, self.corridor_width):
+			if self.dungeon.get_cell(id).is_room():
+				temp_path2_overlaps += 1
 
 		path = temp_path1 if temp_path1_overlaps < temp_path2_overlaps else temp_path2
 
 	return path
 
-func separate_cells(cell1: DungeonCell, cell2: DungeonCell, dir: Vector3):
-	var angle: = dir.angle_to(Vector3.RIGHT)
+func separate_cells():
+	var ticks = 0
+	var overlaps = true
 
-	var cell1_corner: = Vector3.ZERO
-	var cell2_corner: = Vector3.ZERO
+	while overlaps && ticks < 200:
+		overlaps = false
+		for cell1 in self.dungeon.get_cells():
+			var v = Vector3.ZERO
+			var overlapping_cells = self.dungeon.cells_overlapping_cell(cell1.id)
 
-	if dir.x <= 0:
-		cell1_corner.x = cell1.rect.end.x
-		cell2_corner.x = cell2.rect.position.x
-	else:
-		cell1_corner.x = cell1.rect.position.x
-		cell2_corner.x = cell2.rect.end.x
+			for cell2_id in overlapping_cells:
+				if cell1.id != cell2_id:
+					var delta = self.dungeon.get_cell(cell2_id).vector_to(cell1)
+					# Close rectangles should affect movement more than far away rectangles
+					var inv_sqr = 5.0 / (delta.length_squared() + 0.01)
+					v += delta * inv_sqr
 
-	if dir.z <= 0:
-		cell1_corner.z = cell1.rect.end.y
-		cell2_corner.z = cell2.rect.position.y
-	else:
-		cell1_corner.z = cell1.rect.position.y
-		cell2_corner.z = cell2.rect.end.y
+			if overlapping_cells.size() > 1:
+				v *= -1
 
-	var dist_horizontal: = cell2_corner.x - cell1_corner.x
-	var dist_vertical: = cell2_corner.z - cell1_corner.z
+				if v.length() < 0.25:
+					v = v.normalized() * 0.25
+				if v.length() > 2:
+					v = v.normalized() * 2
 
-	var delta1: = Vector3(tan(angle) * dist_vertical, 0, dist_vertical).round()
-	var delta2: = Vector3(dist_horizontal, 0, tan(angle - PI / 2) * dist_horizontal).round()
+				self.dungeon.move_cell(cell1.id, v)
+				overlaps = true
+			else:
+				var snapped = cell1.transform.origin.round()
+				if cell1.transform.origin != snapped:
+					self.dungeon.position_cell(cell1.id, snapped)
 
-	if delta1.length() < delta2.length():
-		cell1.move(delta1)
-	else:
-		cell1.move(delta2)
+		ticks += 1
 
-func get_overlapping_cell(cell1: DungeonCell) -> DungeonCell:
-	for cell2 in self.cells.values():
-		if cell1.id != cell2.id && cell1.rect.intersects(cell2.rect):
-			return cell2
-	return null
+	# Make sure all cells are snapped to grid
+	for cell in self.dungeon.get_cells():
+		var snapped = cell.transform.origin.round()
+		if cell.transform.origin != snapped:
+			self.dungeon.position_cell(cell.id, snapped)
 
-func get_cell_at(pos: Vector3, include_typeless: = true) -> DungeonCell:
-	for cell in self.cells.values():
-		if !include_typeless && cell.is_typeless():
-			continue
-		if point_overlaps_cell(pos, cell):
-			return cell
-	return null
+func separate_cells_fast():
+	var separated = []
 
-func path_overlaps_cell(path: Array, cell: DungeonCell, line_width: int = 1):
-	for i in range(path.size() - 1):
-		var path_p1: = Vector2(path[i].x, path[i].z)
-		var path_p2: = Vector2(path[i + 1].x, path[i + 1].z)
-		return Util.segment_intersects_rect2(path_p1, path_p2, cell.rect, line_width)
+	for cell1 in self.dungeon.get_cells():
+		var dir: Vector3 = cell1.transform.origin.normalized()
+		var angle: = dir.angle_to(Vector3.RIGHT)
 
-	return false
+		while true:
+			var cell2: DungeonCell
 
-func point_overlaps_cell(point: Vector3, cell: DungeonCell):
-	return cell.rect.has_point(Vector2(point.x, point.z))
+			for cell in self.dungeon.get_cells():
+				if cell1.id != cell.id && cell1.rect.intersects(cell.rect):
+					cell2 = cell
+					break
+
+			if !cell2:
+				break
+
+			var cell1_corner: = Vector3.ZERO
+			cell1_corner.x = cell1.rect.end.x if dir.x <= 0 else cell1.rect.position.x
+			cell1_corner.z = cell1.rect.end.y if dir.z <= 0 else cell1.rect.position.y
+
+			var cell2_corner: = Vector3.ZERO
+			cell2_corner.x = cell2.rect.position.x if dir.x <= 0 else cell2.rect.end.x
+			cell2_corner.z = cell2.rect.position.y if dir.z <= 0 else cell2.rect.end.y
+
+			var dist_horizontal: = cell2_corner.x - cell1_corner.x
+			var dist_vertical: = cell2_corner.z - cell1_corner.z
+
+			var delta1: = Vector3(tan(angle) * dist_vertical, 0, dist_vertical)
+			var delta2: = Vector3(dist_horizontal, 0, tan(angle - PI / 2) * dist_horizontal)
+			var delta = delta1 if delta1.length() < delta2.length() else delta2
+
+			assert(delta.length() > 0)
+
+			self.dungeon.move_cell(cell1.id, delta.round())
+
+		separated.append(cell1)

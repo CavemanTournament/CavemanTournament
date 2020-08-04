@@ -29,6 +29,9 @@ func _init(_id: int):
 func distance_to(cell: DungeonCell) -> float:
 	return self.transform.origin.distance_to(cell.transform.origin)
 
+func vector_to(cell: DungeonCell) -> Vector3:
+	return self.transform.origin - cell.transform.origin
+
 func set_size(size: Vector3) -> void:
 	self.height = size.y
 
@@ -67,12 +70,15 @@ func merge(cell: DungeonCell) -> bool:
 	if !cell:
 		return false
 
-	var intersects = self.rect.intersects(cell.rect, true)
-	var rect_eq = Util.rect2_component_equality(self.rect, cell.rect)
+	return merge_rect(cell.rect)
+
+func merge_rect(r: Rect2) -> bool:
+	var intersects = self.rect.intersects(r, true)
+	var rect_eq = Util.rect2_component_equality(self.rect, r)
 
 	# Only merge if cells are aligned on some axis and are at least touching
 	if intersects && (rect_eq.y || rect_eq.x):
-		set_rect(self.rect.merge(cell.rect))
+		set_rect(self.rect.merge(r))
 		return true
 
 	return false

@@ -13,20 +13,50 @@ static func segment_intersects_rect2(
 	segment_width: int = 1
 ) -> bool:
 	var w = (float(segment_width) - 1) / 2
-	var rect_p1 = Vector2(rect.position.x - floor(w), rect.position.y - floor(w))
-	var rect_p2 = Vector2(rect.end.x + ceil(w), rect.position.y - floor(w))
-	var rect_p3 = Vector2(rect.end.x + ceil(w), rect.end.y + ceil(w))
-	var rect_p4 = Vector2(rect.position.x - floor(w), rect.end.y + ceil(w))
+	rect = rect.grow(w)
 
-	return (
-		Geometry.segment_intersects_segment_2d(p1, p2, rect_p1, rect_p2) ||
-		Geometry.segment_intersects_segment_2d(p1, p2, rect_p2, rect_p3) ||
-		Geometry.segment_intersects_segment_2d(p1, p2, rect_p3, rect_p4) ||
-		Geometry.segment_intersects_segment_2d(p1, p2, rect_p4, rect_p1)
-	)
+	var min_x = min(p1.x, p2.x)
+	var max_x = max(p1.x, p2.x)
+	min_x = max(min_x, rect.position.x)
+	max_x = min(max_x, rect.end.x)
+
+	if min_x > max_x:
+		# Segment is fully on the left or right side of the rectangle
+		return false
+
+	var min_y = p1.y
+	var max_y = p2.y
+
+	# Calculate y position for segment when x is min_x and max_x
+	var dx = p2.x - p1.x
+	if abs(dx) > 0.0000001:
+		# A line can be represented as (ax + b), so we need to calculate a and b
+		# from the given endpoints p1 and p2
+		var a = (p2.y - p1.y) / dx
+		var b = p1.y - (a * p1.x)
+		min_y = (a * min_x) + b
+		max_y = (a * max_x) + b
+
+	if min_y > max_y:
+		var tmp = max_y
+		max_y = min_y
+		min_y = tmp
+
+	min_y = max(min_y, rect.position.y)
+	max_y = min(max_y, rect.end.y)
+
+	# Segment intersects if it's not fully above or below the rectangle
+	return min_y <= max_y
 
 static func rect2_component_equality(rect1, rect2) -> Dictionary:
 	return {
 		"x": rect1.position.x == rect2.position.x && rect1.end.x == rect2.end.x,
 		"y": rect1.position.y == rect2.position.y && rect1.end.y == rect2.end.y
 	}
+
+static func filter(filter_function: FuncRef, arr: Array) -> Array:
+	var results = []
+	for value in arr:
+		if filter_function.call_func(value):
+			results.append(value)
+	return results
