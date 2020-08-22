@@ -2,12 +2,12 @@
 
 importer="scene"
 type="PackedScene"
-path="res://.import/wallCorner.fbx-4b00f18592a8464f9b529e83fe418866.scn"
+path="res://.import/wallCorner.fbx-a00abb2bfec5da403c58b6ce0f0cb658.scn"
 
 [deps]
 
-source_file="res://objects/wallCorner.fbx"
-dest_files=[ "res://.import/wallCorner.fbx-4b00f18592a8464f9b529e83fe418866.scn" ]
+source_file="res://blender_files/wallCorner.fbx"
+dest_files=[ "res://.import/wallCorner.fbx-a00abb2bfec5da403c58b6ce0f0cb658.scn" ]
 
 [params]
 
