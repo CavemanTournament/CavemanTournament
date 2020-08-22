@@ -10,6 +10,7 @@ vertex_color_use_as_albedo = true
 [node name="Main" type="Spatial"]
 script = ExtResource( 1 )
 tile_size = 1.0
+num_cells = 150
 cell_size_mean = 6
 cell_size_deviation = 3
 cell_position_range = 10
@@ -19,7 +20,7 @@ cell_position_range = 10
 [node name="Walls" type="Node" parent="."]
 
 [node name="Camera" type="Camera" parent="."]
-transform = Transform( 1, 0, 0, 0, 0.509777, 0.860306, 0, -0.860306, 0.509777, 0, 0.83443, 0 )
+transform = Transform( 1, 0, 0, 0, 0.258819, 0.965926, 0, -0.965926, 0.258819, 0, 100, -20 )
 fov = 90.7
 size = 200.0
 near = 0.1
@@ -31,10 +32,19 @@ transform = Transform( 1, 0, 0, 0, -0.311456, 0.950261, 0, -0.950261, -0.311456,
 [node name="ImmediateGeometry" type="ImmediateGeometry" parent="."]
 material_override = SubResource( 1 )
 
-[node name="GridMap" type="GridMap" parent="."]
+[node name="FloorGridMap" type="GridMap" parent="."]
 mesh_library = ExtResource( 2 )
-cell_size = Vector3( 5, 5, 5 )
-cell_scale = 100.0
+cell_size = Vector3( 6, 6, 6 )
+data = {
+"cells": PoolIntArray(  )
+}
+__meta__ = {
+"_editor_clip_": 0
+}
+
+[node name="WallGridMap" type="GridMap" parent="."]
+mesh_library = ExtResource( 2 )
+cell_size = Vector3( 6, 6, 6 )
 data = {
 "cells": PoolIntArray(  )
 }

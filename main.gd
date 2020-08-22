@@ -16,11 +16,8 @@ export var debug_separation = false
 onready var debug_geom: = $ImmediateGeometry
 onready var floors: = $Floors
 onready var walls: = $Walls
-onready var gridmap: = $GridMap
-
-var Floor = preload("res://objects/floor.tscn")
-var Wall = preload("res://objects/wall.tscn")
-var Corner = preload("res://objects/wallCorner.tscn")
+onready var floorGridmap: = $FloorGridMap
+onready var wallGridmap: = $WallGridMap
 
 func _ready():
 	make_cells()
@@ -46,13 +43,13 @@ func make_cells() -> void:
 					grid[Vector2(x, y)] = cell
 
 	for vect in grid:
-		var floorInst = Floor.instance()
-		var floorAabb: AABB = floorInst.get_node("Cube2").get_aabb()
-		var x = floorAabb.size.x * vect.x
-		var y = floorAabb.size.y * vect.y
-		floorInst.transform.origin = Vector3(x, 0, y)
+#		var floorInst = Floor.instance()
+#		var floorAabb: AABB = floorInst.get_node("Cube2").get_aabb()
+#		var x = floorAabb.size.x * vect.x
+#		var y = floorAabb.size.y * vect.y
+#		floorInst.transform.origin = Vector3(x, 0, y)
 #		self.floors.add_child(floorInst)
-		self.gridmap.set_cell_item(vect.x, 0, vect.y, 0, 0)
+		self.floorGridmap.set_cell_item(vect.x, 0, vect.y, 0, 0)
 
 		var hasLeft = grid.has(Vector2(vect.x - 1, vect.y))
 		var hasRight = grid.has(Vector2(vect.x + 1, vect.y))
@@ -63,16 +60,14 @@ func make_cells() -> void:
 		var hasLeftDown = grid.has(Vector2(vect.x - 1, vect.y + 1))
 		var hasRightDown = grid.has(Vector2(vect.x + 1, vect.y + 1))
 
-		var leftUpCorner = Vector3(x - (floorAabb.size.x / 2), 0, y - (floorAabb.size.y / 2))
-		var rightUpCorner = Vector3(x + (floorAabb.size.x / 2), 0, y - (floorAabb.size.y / 2))
-		var leftDownCorner = Vector3(x - (floorAabb.size.x / 2), 0, y + (floorAabb.size.y / 2))
-		var rightDownCorner = Vector3(x + (floorAabb.size.x / 2), 0, y + (floorAabb.size.y / 2))
+#		var leftUpCorner = Vector3(x - (floorAabb.size.x / 2), 0, y - (floorAabb.size.y / 2))
+#		var rightUpCorner = Vector3(x + (floorAabb.size.x / 2), 0, y - (floorAabb.size.y / 2))
+#		var leftDownCorner = Vector3(x - (floorAabb.size.x / 2), 0, y + (floorAabb.size.y / 2))
+#		var rightDownCorner = Vector3(x + (floorAabb.size.x / 2), 0, y + (floorAabb.size.y / 2))
 
 		# Add walls
-#		if !hasLeft && hasUp && !hasLeftUp:
-#			var wallInst = Wall.instance()
-#			wallInst.transform.origin = leftUpCorner
-#			self.walls.add_child(wallInst)
+		if !hasLeft:
+			self.wallGridmap.set_cell_item(vect.x, 0, vect.y, 1, 0)
 #
 #		if !hasRight && hasUp && !hasRightUp:
 #			var wallInst = Wall.instance()
@@ -177,7 +172,8 @@ func _input(event):
 		for n in floor_objs + wall_objs:
 			n.queue_free()
 
-		self.gridmap.clear()
+		self.floorGridmap.clear()
+		self.wallGridmap.clear()
 
 		# Wait one frame for cells to be cleared from tree
 		yield(get_tree(), "idle_frame")
