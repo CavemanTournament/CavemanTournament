@@ -168,14 +168,15 @@ func draw_cell(cell) -> void:
 	self.debug_geom.add_vertex(p1)
 	self.debug_geom.end()
 
-func _input(event):
-	if event.is_action_pressed('ui_select'):
-		var floor_objs = self.floors.get_children()
-		var wall_objs = self.walls.get_children()
-		for n in floor_objs + wall_objs:
-			n.queue_free()
+func reset_level():
+	var floor_objs = self.floors.get_children()
+	var wall_objs = self.walls.get_children()
+	for n in floor_objs + wall_objs:
+		n.queue_free()
 
-		# Wait one frame for cells to be cleared from tree
-		yield(get_tree(), "idle_frame")
-		make_cells()
-		yield(get_tree(), "idle_frame")
+	# Wait one frame for cells to be cleared from tree
+	yield(get_tree(), "idle_frame")
+	make_cells()
+	yield(get_tree(), "idle_frame")
+
+

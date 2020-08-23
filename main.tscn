@@ -1,6 +1,8 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://main.gd" type="Script" id=1]
+[ext_resource path="res://debug_controls/camera_target.gd" type="Script" id=2]
+[ext_resource path="res://debug_controls/debug_controls.gd" type="Script" id=3]
 
 [sub_resource type="SpatialMaterial" id=1]
 flags_unshaded = true
@@ -12,19 +14,29 @@ tile_size = 1.0
 cell_size_mean = 6
 cell_size_deviation = 3
 cell_position_range = 10
-min_room_size = 12
 corridor_width = 1
 
 [node name="Floors" type="Node" parent="."]
 
 [node name="Walls" type="Node" parent="."]
 
-[node name="Camera" type="Camera" parent="."]
-transform = Transform( 1, 0, 0, 0, 0.509777, 0.860306, 0, -0.860306, 0.509777, 0, 0.83443, 0 )
+[node name="DebugControls" type="Spatial" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.834, 2.13331e-08 )
+script = ExtResource( 3 )
+
+[node name="CameraTarget" type="Spatial" parent="DebugControls"]
+transform = Transform( 1, 0, 0, 0, 0.509792, 0.860298, 0, -0.860298, 0.509792, 0, 0, 0 )
+script = ExtResource( 2 )
+
+[node name="InterpolatedCamera" type="InterpolatedCamera" parent="DebugControls"]
+transform = Transform( 1, 0, 0, 0, 0.509792, 0.860298, 0, -0.860298, 0.509792, 0, 0.000214994, 0.00037235 )
 fov = 90.7
 size = 200.0
 near = 0.1
 far = 683.8
+target = NodePath("../CameraTarget")
+speed = 7.0
+enabled = true
 
 [node name="DirectionalLight" type="DirectionalLight" parent="."]
 transform = Transform( 1, 0, 0, 0, -0.311456, 0.950261, 0, -0.950261, -0.311456, 0, 12.3021, -13.7998 )
