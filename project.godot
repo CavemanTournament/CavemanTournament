@@ -14,7 +14,7 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://dungeon/dungeon.gd"
 }, {
-"base": "RigidBody",
+"base": "Reference",
 "class": "DungeonCell",
 "language": "GDScript",
 "path": "res://dungeon/cell.gd"
@@ -57,7 +57,7 @@ _global_script_class_icons={
 [application]
 
 config/name="Caveman Tournament"
-run/main_scene="res://levels/test_level.tscn"
+run/main_scene="res://main.tscn"
 config/icon="res://icon.png"
 
 [autoload]

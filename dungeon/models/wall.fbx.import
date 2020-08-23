@@ -2,12 +2,12 @@
 
 importer="scene"
 type="PackedScene"
-path="res://.import/wall_corner.fbx-d17e5c292f28ec42c78669191800c9f7.scn"
+path="res://.import/wall.fbx-fa84dc75ed97394235910f41ec4bad48.scn"
 
 [deps]
 
-source_file="res://blender_files/wall_corner.fbx"
-dest_files=[ "res://.import/wall_corner.fbx-d17e5c292f28ec42c78669191800c9f7.scn" ]
+source_file="res://dungeon/models/wall.fbx"
+dest_files=[ "res://.import/wall.fbx-fa84dc75ed97394235910f41ec4bad48.scn" ]
 
 [params]
 

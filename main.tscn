@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://main.gd" type="Script" id=1]
-[ext_resource path="res://dungeon/dungeon.meshlib" type="MeshLibrary" id=2]
+[ext_resource path="res://dungeon/meshes/meshlib.meshlib" type="MeshLibrary" id=2]
 
 [sub_resource type="SpatialMaterial" id=1]
 flags_unshaded = true
@@ -9,15 +9,10 @@ vertex_color_use_as_albedo = true
 
 [node name="Main" type="Spatial"]
 script = ExtResource( 1 )
-tile_size = 1.0
 num_cells = 150
 cell_size_mean = 6
 cell_size_deviation = 3
 cell_position_range = 10
-
-[node name="Floors" type="Node" parent="."]
-
-[node name="Walls" type="Node" parent="."]
 
 [node name="Camera" type="Camera" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.258819, 0.965926, 0, -0.965926, 0.258819, 0, 100, -20 )
@@ -32,17 +27,7 @@ transform = Transform( 1, 0, 0, 0, -0.311456, 0.950261, 0, -0.950261, -0.311456,
 [node name="ImmediateGeometry" type="ImmediateGeometry" parent="."]
 material_override = SubResource( 1 )
 
-[node name="FloorGridMap" type="GridMap" parent="."]
-mesh_library = ExtResource( 2 )
-cell_size = Vector3( 6, 6, 6 )
-data = {
-"cells": PoolIntArray(  )
-}
-__meta__ = {
-"_editor_clip_": 0
-}
-
-[node name="WallGridMap" type="GridMap" parent="."]
+[node name="GridMap" type="GridMap" parent="."]
 mesh_library = ExtResource( 2 )
 cell_size = Vector3( 6, 6, 6 )
 data = {

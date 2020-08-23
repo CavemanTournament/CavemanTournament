@@ -1,70 +1,49 @@
-extends RigidBody
 class_name DungeonCell
 
 var id: int
 var height: float
+var pos: = Vector2()
 var rect: = Rect2()
 var type: int = DungeonVariables.CellType.NONE
 
-var collision_shape
-var mesh_instance
-
 func _init(_id: int):
-	# Set RigidBody mode
-	self.mode = MODE_STATIC
-
 	self.id = _id
-	self.collision_shape = CollisionShape.new()
-	self.mesh_instance = MeshInstance.new()
-
-	var shape = BoxShape.new()
-	var mesh = CubeMesh.new()
-
-	self.collision_shape.set_shape(shape)
-	self.mesh_instance.set_mesh(mesh)
-
-	add_child(self.collision_shape)
-	add_child(self.mesh_instance)
 
 func distance_to(cell: DungeonCell) -> float:
-	return self.transform.origin.distance_to(cell.transform.origin)
+	return self.pos.distance_to(cell.pos)
 
-func vector_to(cell: DungeonCell) -> Vector3:
-	return self.transform.origin - cell.transform.origin
+func vector_to(cell: DungeonCell) -> Vector2:
+	return self.pos - cell.pos
 
-func set_size(size: Vector3) -> void:
+func set_size(size: Vector2) -> void:
 	self.height = size.y
 
-	var x = self.transform.origin.x - (size.x / 2)
-	var z = self.transform.origin.z - (size.z / 2)
-	set_rect(Rect2(x, z, size.x, size.z))
+	var x = self.pos.x - (size.x / 2)
+	var z = self.pos.y - (size.y / 2)
+	set_rect(Rect2(x, z, size.x, size.y))
 
-	self.collision_shape.shape.extents = size
-	self.mesh_instance.mesh.size = size
+func get_size() -> Vector2:
+	return self.rect.size
 
-func get_size() -> Vector3:
-	return Vector3(self.rect.size.x, self.height, self.rect.size.y)
+func move(translation: Vector2) -> void:
+	set_position(self.pos + translation)
 
-func move(translation: Vector3) -> void:
-	set_position(self.transform.origin + translation)
-
-func set_position(pos: Vector3) -> void:
-	self.transform.origin = pos
+func set_position(_pos: Vector2) -> void:
+	self.pos = _pos
 	self.rect = Rect2(
-		pos.x - (self.rect.size.x / 2),
-		pos.z - (self.rect.size.y / 2),
+		self.pos.x - (self.rect.size.x / 2),
+		self.pos.y - (self.rect.size.y / 2),
 		self.rect.size.x,
 		self.rect.size.y
 	)
 
 func set_rect(_rect: Rect2) -> void:
 	self.rect = _rect
-	self.transform.origin.x = (rect.position.x + rect.end.x) / 2
-	self.transform.origin.z = (rect.position.y + rect.end.y) / 2
+	self.pos.x = (rect.position.x + rect.end.x) / 2
+	self.pos.y = (rect.position.y + rect.end.y) / 2
 
 func set_type(_type: int) -> void:
 	self.type = _type
-	self.mesh_instance.mesh.set_material(DungeonVariables.CELL_MATERIALS[type])
 
 func merge(cell: DungeonCell) -> bool:
 	if !cell:
