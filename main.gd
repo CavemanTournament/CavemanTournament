@@ -14,6 +14,7 @@ export var debug_separation = false
 
 onready var debug_geom: = $ImmediateGeometry
 onready var gridmap: = $GridMap
+onready var player: = $Player
 
 func _ready():
 	make_cells()
@@ -35,7 +36,12 @@ func make_cells() -> void:
 	var grid: Dictionary
 	var walls: Dictionary
 
+	var rooms := []
+
 	for cell in dungeon.get_cells():
+		if cell.is_room():
+			rooms.append(cell)
+
 		if !cell.is_typeless():
 			for x in range(cell.rect.position.x, cell.rect.end.x):
 				for y in range(cell.rect.position.y, cell.rect.end.y):
@@ -56,6 +62,15 @@ func make_cells() -> void:
 	if self.debug:
 		for cell in dungeon.get_cells():
 			draw_cell(cell)
+
+	var start_room = rooms[randi() % rooms.size()]
+
+	var room_mid_x = round((start_room.rect.end.x + start_room.rect.position.x) / 2)
+	var room_mid_y = round((start_room.rect.end.y + start_room.rect.position.y) / 2)
+	var player_pos = self.gridmap.map_to_world(room_mid_x, 0, room_mid_y)
+
+	player.transform.origin = player_pos
+	print(player_pos)
 
 func draw_cell(cell) -> void:
 	self.debug_geom.begin(Mesh.PRIMITIVE_LINE_LOOP)
