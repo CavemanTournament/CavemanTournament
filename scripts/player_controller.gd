@@ -53,9 +53,8 @@ func get_joy_axis_vector_for_player(player_id: int, horizontal_axis: int, vertic
 
 	return axis_vector
 
-
 func _physics_process(delta):
 	get_joystick_input() if !use_keyboard else get_keyboard_input()
 
-#	velocity.y -= delta * gravity
+	velocity.y -= delta * gravity
 	velocity = move_and_slide(velocity, Vector3(0, 1, 0))
