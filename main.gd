@@ -14,10 +14,18 @@ export var debug_separation = false
 
 onready var debug_geom: = $ImmediateGeometry
 onready var gridmap: = $GridMap
+onready var lights: = $Lights
 onready var player: = $Player
+
+var DungeonLight = preload("res://dungeon/light.tscn")
 
 func _ready():
 	make_cells()
+
+func cell_center(cell: DungeonCell):
+	var mid_x = round((cell.rect.end.x + cell.rect.position.x) / 2)
+	var mid_y = round((cell.rect.end.y + cell.rect.position.y) / 2)
+	return self.gridmap.map_to_world(mid_x, 0, mid_y)
 
 func make_cells() -> void:
 	var dungeon_generator = DungeonGenerator.new(
@@ -64,13 +72,15 @@ func make_cells() -> void:
 			draw_cell(cell)
 
 	var start_room = rooms[randi() % rooms.size()]
+	player.transform.origin = cell_center(start_room)
 
-	var room_mid_x = round((start_room.rect.end.x + start_room.rect.position.x) / 2)
-	var room_mid_y = round((start_room.rect.end.y + start_room.rect.position.y) / 2)
-	var player_pos = self.gridmap.map_to_world(room_mid_x, 0, room_mid_y)
+	for room in rooms:
+		var light = DungeonLight.instance()
+		light.transform.origin = cell_center(room) + Vector3(0, 20, 0)
+#		self.lights.add_child(light)
 
-	player.transform.origin = player_pos
-	print(player_pos)
+	self.gridmap.make_baked_meshes()
+
 
 func draw_cell(cell) -> void:
 	self.debug_geom.begin(Mesh.PRIMITIVE_LINE_LOOP)
@@ -99,7 +109,10 @@ func _input(event):
 	if event.is_action_pressed('ui_select'):
 		self.gridmap.clear()
 
-		# Wait one frame for cells to be cleared from tree
+		for light in self.lights.get_children():
+			light.queue_free()
+
+		# Wait one frame for removed nodes to be cleared from tree
 		yield(get_tree(), "idle_frame")
 		make_cells()
 		yield(get_tree(), "idle_frame")
