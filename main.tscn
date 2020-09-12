@@ -37,5 +37,3 @@ directional_shadow_mode = 0
 directional_shadow_blend_splits = true
 
 [node name="Player" parent="." instance=ExtResource( 3 )]
-
-[node name="Lights" type="Node" parent="."]
