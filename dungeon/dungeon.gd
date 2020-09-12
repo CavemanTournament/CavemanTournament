@@ -9,7 +9,7 @@ func _init():
 	self.tree = RTree.new()
 	self.next_cell_id = 0
 
-func add_cell(pos: Vector3, size: Vector3) -> DungeonCell:
+func add_cell(pos: Vector2, size: Vector2) -> DungeonCell:
 	var cell: = DungeonCell.new(_get_unused_cell_id())
 	cell.set_position(pos)
 	cell.set_size(size)
@@ -27,10 +27,10 @@ func get_cells() -> Array:
 func get_cell(id: int) -> DungeonCell:
 	return self.cells[id]
 
-func move_cell(id: int, delta: Vector3) -> void:
-	position_cell(id, get_cell(id).transform.origin + delta)
+func move_cell(id: int, delta: Vector2) -> void:
+	position_cell(id, get_cell(id).pos + delta)
 
-func position_cell(id: int, pos: Vector3) -> void:
+func position_cell(id: int, pos: Vector2) -> void:
 	var cell = get_cell(id)
 	cell.set_position(pos)
 	self.tree.update(id, cell.rect)
@@ -46,8 +46,8 @@ func merge_cell(id: int, r: Rect2) -> bool:
 func cells_overlapping_cell(id: int) -> Array:
 	return self.tree.query_rect2(self.cells[id].rect)
 
-func cells_overlapping_point(v: Vector3) -> Array:
-	return self.tree.query_point(Vector2(v.x, v.z))
+func cells_overlapping_point(point: Vector2) -> Array:
+	return self.tree.query_point(point)
 
 func cells_overlapping_path(path: Array, segment_width: = 1) -> Array:
 	var cells = []
@@ -55,10 +55,8 @@ func cells_overlapping_path(path: Array, segment_width: = 1) -> Array:
 		cells += cells_overlapping_segment(path[i], path[i + 1], segment_width)
 	return cells
 
-func cells_overlapping_segment(from: Vector3, to: Vector3, segment_width: = 1) -> Array:
-	var p1: = Vector2(from.x, from.z)
-	var p2: = Vector2(to.x, to.z)
-	return self.tree.query_segment(p1, p2, segment_width)
+func cells_overlapping_segment(from: Vector2, to: Vector2, segment_width: = 1) -> Array:
+	return self.tree.query_segment(from, to, segment_width)
 
 func _get_unused_cell_id() -> int:
 	var id: = self.next_cell_id

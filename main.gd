@@ -1,6 +1,5 @@
 extends Spatial
 
-export var tile_size: = 8.0
 export var num_cells: = 100
 export var cell_size_mean: = 10
 export var cell_size_deviation: = 4
@@ -14,12 +13,7 @@ export var debug = false
 export var debug_separation = false
 
 onready var debug_geom: = $ImmediateGeometry
-onready var floors: = $Floors
-onready var walls: = $Walls
-
-var Floor = preload("res://objects/floor.tscn")
-var Wall = preload("res://objects/wall.tscn")
-var Corner = preload("res://objects/wallCorner.tscn")
+onready var gridmap: = $GridMap
 
 func _ready():
 	make_cells()
@@ -35,8 +29,11 @@ func make_cells() -> void:
 		self.cell_height,
 		self.fast_separation
 	)
+
 	var dungeon = dungeon_generator.generate(self.debug_separation)
+
 	var grid: Dictionary
+	var walls: Dictionary
 
 	for cell in dungeon.get_cells():
 		if !cell.is_typeless():
@@ -45,97 +42,14 @@ func make_cells() -> void:
 					grid[Vector2(x, y)] = cell
 
 	for vect in grid:
-		var floorInst = Floor.instance()
-		var floorAabb: AABB = floorInst.get_node("Cube2").get_aabb()
-		var x = floorAabb.size.x * vect.x
-		var y = floorAabb.size.y * vect.y
-		floorInst.transform.origin = Vector3(x, 0, y)
-		self.floors.add_child(floorInst)
+		self.gridmap.set_cell_item(vect.x, 0, vect.y, 0, 0)
 
-		var hasLeft = grid.has(Vector2(vect.x - 1, vect.y))
-		var hasRight = grid.has(Vector2(vect.x + 1, vect.y))
-		var hasUp = grid.has(Vector2(vect.x, vect.y - 1))
-		var hasDown = grid.has(Vector2(vect.x, vect.y + 1))
-		var hasLeftUp = grid.has(Vector2(vect.x - 1, vect.y - 1))
-		var hasRightUp = grid.has(Vector2(vect.x + 1, vect.y - 1))
-		var hasLeftDown = grid.has(Vector2(vect.x - 1, vect.y + 1))
-		var hasRightDown = grid.has(Vector2(vect.x + 1, vect.y + 1))
-
-		var leftUpCorner = Vector3(x - (floorAabb.size.x / 2), 0, y - (floorAabb.size.y / 2))
-		var rightUpCorner = Vector3(x + (floorAabb.size.x / 2), 0, y - (floorAabb.size.y / 2))
-		var leftDownCorner = Vector3(x - (floorAabb.size.x / 2), 0, y + (floorAabb.size.y / 2))
-		var rightDownCorner = Vector3(x + (floorAabb.size.x / 2), 0, y + (floorAabb.size.y / 2))
-
-		# Add walls
-		if !hasLeft && hasUp && !hasLeftUp:
-			var wallInst = Wall.instance()
-			wallInst.transform.origin = leftUpCorner
-			self.walls.add_child(wallInst)
-
-		if !hasRight && hasUp && !hasRightUp:
-			var wallInst = Wall.instance()
-			wallInst.transform.origin = rightUpCorner
-			self.walls.add_child(wallInst)
-
-		if !hasUp && hasRight && !hasRightUp:
-			var wallInst = Wall.instance()
-			wallInst.rotate_y(deg2rad(90))
-			wallInst.transform.origin = rightUpCorner
-			self.walls.add_child(wallInst)
-
-		if !hasDown && hasRight && !hasRightDown:
-			var wallInst = Wall.instance()
-			wallInst.rotate_y(deg2rad(90))
-			wallInst.transform.origin = rightDownCorner
-			self.walls.add_child(wallInst)
-
-		# Add inward corners
-		if !hasDown && !hasLeft:
-			var cornerInst = Corner.instance()
-			cornerInst.transform.origin = leftDownCorner
-			self.walls.add_child(cornerInst)
-
-		if !hasDown && !hasRight:
-			var cornerInst = Corner.instance()
-			cornerInst.rotate_y(deg2rad(90))
-			cornerInst.transform.origin = rightDownCorner
-			self.walls.add_child(cornerInst)
-
-		if !hasUp && !hasLeft:
-			var cornerInst = Corner.instance()
-			cornerInst.rotate_y(deg2rad(270))
-			cornerInst.transform.origin = leftUpCorner
-			self.walls.add_child(cornerInst)
-
-		if !hasUp && !hasRight:
-			var cornerInst = Corner.instance()
-			cornerInst.rotate_y(deg2rad(180))
-			cornerInst.transform.origin = rightUpCorner
-			self.walls.add_child(cornerInst)
-
-		# Add outward corners
-		if hasUp && hasRight && !hasRightUp:
-			var cornerInst = Corner.instance()
-			cornerInst.transform.origin = rightUpCorner
-			self.walls.add_child(cornerInst)
-
-		if hasUp && hasLeft && !hasLeftUp:
-			var cornerInst = Corner.instance()
-			cornerInst.rotate_y(deg2rad(90))
-			cornerInst.transform.origin = leftUpCorner
-			self.walls.add_child(cornerInst)
-
-		if hasDown && hasRight && !hasRightDown:
-			var cornerInst = Corner.instance()
-			cornerInst.rotate_y(deg2rad(270))
-			cornerInst.transform.origin = rightDownCorner
-			self.walls.add_child(cornerInst)
-
-		if hasDown && hasLeft && !hasLeftDown:
-			var cornerInst = Corner.instance()
-			cornerInst.rotate_y(deg2rad(180))
-			cornerInst.transform.origin = leftDownCorner
-			self.walls.add_child(cornerInst)
+		for dx in range(-1, 2):
+			for dy in range(-1, 2):
+				var v = Vector2(vect.x + dx, vect.y + dy)
+				if !grid.has(v) && !walls.has(v):
+					walls[v] = true
+					self.gridmap.set_cell_item(v.x, 0, v.y, 1, 0)
 
 	self.debug_geom.clear()
 
@@ -154,12 +68,10 @@ func draw_cell(cell) -> void:
 	if cell.is_corridor():
 		self.debug_geom.set_color(Color(0, 0, 0.5))
 
-	var y = cell_height * tile_size
-
-	var p1 = Vector3(cell.rect.position.x, y, cell.rect.position.y)
-	var p2 = Vector3(cell.rect.end.x, y, cell.rect.position.y)
-	var p3 = Vector3(cell.rect.end.x, y, cell.rect.end.y)
-	var p4 = Vector3(cell.rect.position.x, y, cell.rect.end.y)
+	var p1 = Vector3(cell.rect.position.x, 5, cell.rect.position.y)
+	var p2 = Vector3(cell.rect.end.x, 5, cell.rect.position.y)
+	var p3 = Vector3(cell.rect.end.x, 5, cell.rect.end.y)
+	var p4 = Vector3(cell.rect.position.x, 5, cell.rect.end.y)
 
 	self.debug_geom.add_vertex(p1)
 	self.debug_geom.add_vertex(p2)
@@ -170,10 +82,7 @@ func draw_cell(cell) -> void:
 
 func _input(event):
 	if event.is_action_pressed('ui_select'):
-		var floor_objs = self.floors.get_children()
-		var wall_objs = self.walls.get_children()
-		for n in floor_objs + wall_objs:
-			n.queue_free()
+		self.gridmap.clear()
 
 		# Wait one frame for cells to be cleared from tree
 		yield(get_tree(), "idle_frame")

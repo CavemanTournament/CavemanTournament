@@ -2,12 +2,12 @@
 
 importer="scene"
 type="PackedScene"
-path="res://.import/floor.fbx-813937f4e36c305430a19595a64a57dd.scn"
+path="res://.import/floor.fbx-c8c88dd04f742f4da7bf3c3416307327.scn"
 
 [deps]
 
-source_file="res://objects/floor.fbx"
-dest_files=[ "res://.import/floor.fbx-813937f4e36c305430a19595a64a57dd.scn" ]
+source_file="res://dungeon/models/floor.fbx"
+dest_files=[ "res://.import/floor.fbx-c8c88dd04f742f4da7bf3c3416307327.scn" ]
 
 [params]
 
