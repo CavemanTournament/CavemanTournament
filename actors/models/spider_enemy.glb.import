@@ -2,12 +2,12 @@
 
 importer="scene"
 type="PackedScene"
-path="res://.import/riggedPlayer.fbx-9cc64ec67093bdac562876895faca4be.scn"
+path="res://.import/spider_enemy.glb-ce9832c57531fe96f15de87589ee8ceb.scn"
 
 [deps]
 
-source_file="res://actors/riggedPlayer.fbx"
-dest_files=[ "res://.import/riggedPlayer.fbx-9cc64ec67093bdac562876895faca4be.scn" ]
+source_file="res://actors/models/spider_enemy.glb"
+dest_files=[ "res://.import/spider_enemy.glb-ce9832c57531fe96f15de87589ee8ceb.scn" ]
 
 [params]
 
