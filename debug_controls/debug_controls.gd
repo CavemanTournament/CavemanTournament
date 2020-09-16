@@ -8,5 +8,6 @@ func _unhandled_input(event):
 		if event.is_action_pressed("debug_exit_game"):
 			get_tree().quit()
 		if event.is_action_pressed("debug_reset_level") and \
-			owner.has_method("reset_level"):
-			owner.reset_level()
+			get_parent() and \
+			get_parent().has_method("reset_level"):
+			get_parent().reset_level()
