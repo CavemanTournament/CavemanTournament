@@ -249,15 +249,15 @@ func draw_cell(cell) -> void:
 	self.debug_geom.end()
 
 func reset_level():
-  self.gridmap.clear()
+	self.gridmap.clear()
 
-  for node in self.enemies.get_children():
-    node.queue_free()
+	for node in self.enemies.get_children():
+		node.queue_free()
 
-  for node in self.navigation.get_children():
-    node.queue_free()
+	for node in self.navigation.get_children():
+		node.queue_free()
 
-  # Wait one frame for removed nodes to be cleared from tree
-  yield(get_tree(), "idle_frame")
-  make_cells()
-  yield(get_tree(), "idle_frame")
+	# Wait one frame for removed nodes to be cleared from tree
+	yield(get_tree(), "idle_frame")
+	make_cells()
+	yield(get_tree(), "idle_frame")
