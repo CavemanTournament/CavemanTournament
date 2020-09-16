@@ -5,8 +5,16 @@ export (int) var speed = 20
 export (int) var gravity = 20
 
 onready var model: Spatial = get_node("Model")
+onready var state_machine: AnimationNodeStateMachinePlayback = get_node("AnimationTree")["parameters/playback"]
+
 var velocity := Vector3()
 const DEAD_ZONE := 0.15
+
+var dodge_speed := 50.0
+var dodge_duration := 0.4
+var dodge_timer := 0.0
+var is_dodging := false
+
 const use_keyboard := true
 
 onready var PlayerCamera = preload("res://scenes/actors/player_camera.tscn")
@@ -55,6 +63,8 @@ func get_keyboard_input(delta):
 	velocity = velocity.normalized() * speed
 	velocity.y = velocity_y
 
+
+# Gets joystick axis as Vector2
 func get_joy_axis_vector_for_player(player_id: int, horizontal_axis: int, vertical_axis: int) -> Vector2:
 	var axis_vector = Vector2()
 	axis_vector.x = Input.get_joy_axis(player_id, horizontal_axis)
@@ -65,8 +75,24 @@ func get_joy_axis_vector_for_player(player_id: int, horizontal_axis: int, vertic
 func shoot():
 	weapon_hand.get_child(0).shoot()
 
-func _physics_process(delta):
-	get_joystick_input() if !use_keyboard else get_keyboard_input(delta)
+func handle_dodge(_delta: float):
+	if Input.is_action_just_pressed('dodge') && !is_dodging:
+		is_dodging = true
+		dodge_timer = 0
+		state_machine.travel('dodge')
+
+	if is_dodging:
+		dodge_timer += _delta
+		velocity = velocity.normalized() * dodge_speed
+	
+	if dodge_timer > dodge_duration:
+		is_dodging = false
+
+func _physics_process(_delta):
+	if !is_dodging:
+		get_joystick_input() if !use_keyboard else get_keyboard_input()
+
+	handle_dodge(_delta)
 
 	velocity.y -= delta * gravity
 	velocity = move_and_slide(velocity, Vector3(0, 1, 0))

@@ -9,3 +9,6 @@ export_presets.cfg
 data_*/
 .DS_Store
 *.blend[1-9]
+
+# Editor-specific ignores
+.vscode/
