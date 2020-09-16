@@ -10,8 +10,8 @@ onready var state_machine: AnimationNodeStateMachinePlayback = get_node("Animati
 var velocity := Vector3()
 const DEAD_ZONE := 0.15
 
-var dodge_speed := 50.0
-var dodge_duration := 0.4
+var dodge_speed := 40.0
+var dodge_duration := 0.3
 var dodge_timer := 0.0
 var is_dodging := false
 
@@ -41,7 +41,7 @@ func get_joystick_input():
 		# TODO: make this in a more sensible way
 		self.rotation.y = Vector2(right_stick_vector.x, -right_stick_vector.y).angle() + PI / 2
 
-	velocity = velocity.normalized() * speed
+	velocity = velocity * speed
 
 func get_keyboard_input(delta):
 	var velocity_y = velocity.y
@@ -94,5 +94,6 @@ func _physics_process(_delta):
 
 	handle_dodge(_delta)
 
-	velocity.y -= delta * gravity
-	velocity = move_and_slide(velocity, Vector3(0, 1, 0))
+	velocity.y -= _delta * gravity
+	velocity = move_and_slide(velocity, Vector3(0, 1, 0), is_dodging)
+
