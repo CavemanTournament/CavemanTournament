@@ -2,12 +2,12 @@
 
 importer="scene"
 type="PackedScene"
-path="res://.import/wallCorner.fbx-4b00f18592a8464f9b529e83fe418866.scn"
+path="res://.import/rigged_player.glb-cadd0ba5230622dec582056e08c76f44.scn"
 
 [deps]
 
-source_file="res://objects/wallCorner.fbx"
-dest_files=[ "res://.import/wallCorner.fbx-4b00f18592a8464f9b529e83fe418866.scn" ]
+source_file="res://actors/models/rigged_player.glb"
+dest_files=[ "res://.import/rigged_player.glb-cadd0ba5230622dec582056e08c76f44.scn" ]
 
 [params]
 

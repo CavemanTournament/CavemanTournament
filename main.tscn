@@ -1,8 +1,10 @@
 [gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://main.gd" type="Script" id=1]
-[ext_resource path="res://debug_controls/camera_target.gd" type="Script" id=2]
-[ext_resource path="res://debug_controls/debug_controls.gd" type="Script" id=3]
+[ext_resource path="res://dungeon/meshes/meshlib.meshlib" type="MeshLibrary" id=2]
+[ext_resource path="res://actors/player.tscn" type="PackedScene" id=3]
+[ext_resource path="res://debug_controls/camera_target.gd" type="Script" id=4]
+[ext_resource path="res://debug_controls/debug_controls.gd" type="Script" id=5]
 
 [sub_resource type="SpatialMaterial" id=1]
 flags_unshaded = true
@@ -10,23 +12,20 @@ vertex_color_use_as_albedo = true
 
 [node name="Main" type="Spatial"]
 script = ExtResource( 1 )
-tile_size = 1.0
+num_cells = 150
 cell_size_mean = 6
 cell_size_deviation = 3
 cell_position_range = 10
+
 corridor_width = 1
-
-[node name="Floors" type="Node" parent="."]
-
-[node name="Walls" type="Node" parent="."]
 
 [node name="DebugControls" type="Spatial" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.834, 2.13331e-08 )
-script = ExtResource( 3 )
+script = ExtResource( 4 )
 
 [node name="CameraTarget" type="Spatial" parent="DebugControls"]
 transform = Transform( 1, 0, 0, 0, 0.509792, 0.860298, 0, -0.860298, 0.509792, 0, 0, 0 )
-script = ExtResource( 2 )
+script = ExtResource( 5 )
 
 [node name="InterpolatedCamera" type="InterpolatedCamera" parent="DebugControls"]
 transform = Transform( 1, 0, 0, 0, 0.509792, 0.860298, 0, -0.860298, 0.509792, 0, 0.000214994, 0.00037235 )
@@ -38,8 +37,30 @@ target = NodePath("../CameraTarget")
 speed = 7.0
 enabled = true
 
-[node name="DirectionalLight" type="DirectionalLight" parent="."]
-transform = Transform( 1, 0, 0, 0, -0.311456, 0.950261, 0, -0.950261, -0.311456, 0, 12.3021, -13.7998 )
-
 [node name="ImmediateGeometry" type="ImmediateGeometry" parent="."]
 material_override = SubResource( 1 )
+cast_shadow = 0
+
+[node name="DirectionalLight" type="DirectionalLight" parent="."]
+transform = Transform( -1.62921e-07, -0.939693, 0.34202, 0, 0.34202, 0.939693, -1, 1.53095e-07, -5.57221e-08, 0, 8.26708, 0 )
+light_bake_mode = 2
+shadow_bias = 1.36
+directional_shadow_mode = 0
+directional_shadow_blend_splits = true
+
+[node name="GridMap" type="GridMap" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+mesh_library = ExtResource( 2 )
+cell_size = Vector3( 6, 6, 6 )
+data = {
+"cells": PoolIntArray(  )
+}
+__meta__ = {
+"_editor_clip_": 0
+}
+
+[node name="Navigation" type="Navigation" parent="."]
+
+[node name="Player" parent="." instance=ExtResource( 3 )]
+
+[node name="Enemies" type="Node" parent="."]

@@ -1,5 +1,13 @@
 class_name Util
 
+static func rangef(start: float, end: float, step: float =  1.0):
+	var res = []
+	var i = start
+	while i < end:
+		res.push_back(i)
+		i += step
+	return res
+
 static func random_point_in_circle(radius: float) -> Vector2:
 	var t = 2 * PI * randf()
 	var u = randf() + randf()

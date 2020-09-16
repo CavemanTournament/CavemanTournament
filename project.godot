@@ -14,7 +14,7 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://dungeon/dungeon.gd"
 }, {
-"base": "RigidBody",
+"base": "Reference",
 "class": "DungeonCell",
 "language": "GDScript",
 "path": "res://dungeon/cell.gd"
@@ -57,12 +57,16 @@ _global_script_class_icons={
 [application]
 
 config/name="Caveman Tournament"
-run/main_scene="res://levels/test_level.tscn"
+run/main_scene="res://main.tscn"
 config/icon="res://icon.png"
 
 [autoload]
 
 DungeonVariables="*res://dungeon/variables.gd"
+
+[display]
+
+window/vsync/use_vsync=false
 
 [editor_plugins]
 
@@ -149,4 +153,6 @@ debug_reset_level={
 
 [rendering]
 
+quality/directional_shadow/size=2048
+quality/filters/msaa=2
 environment/default_environment="res://default_env.tres"
