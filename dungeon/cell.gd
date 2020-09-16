@@ -1,3 +1,5 @@
+extends Reference
+
 class_name DungeonCell
 
 var id: int

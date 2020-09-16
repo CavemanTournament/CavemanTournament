@@ -1,3 +1,5 @@
+extends Reference
+
 class_name Dungeon
 
 var cells: Dictionary

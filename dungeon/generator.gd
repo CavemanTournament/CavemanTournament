@@ -1,3 +1,5 @@
+extends Reference
+
 class_name DungeonGenerator
 
 var num_cells: int # Number of initially generated cells
