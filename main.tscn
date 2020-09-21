@@ -27,7 +27,6 @@ directional_shadow_mode = 0
 directional_shadow_blend_splits = true
 
 [node name="GridMap" type="GridMap" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 mesh_library = ExtResource( 2 )
 cell_size = Vector3( 6, 6, 6 )
 data = {
