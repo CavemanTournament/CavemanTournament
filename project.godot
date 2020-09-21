@@ -10,14 +10,14 @@ config_version=4
 
 _global_script_classes=[ {
 "base": "Reference",
-"class": "Dungeon",
-"language": "GDScript",
-"path": "res://dungeon/dungeon.gd"
-}, {
-"base": "Reference",
 "class": "DungeonCell",
 "language": "GDScript",
 "path": "res://dungeon/cell.gd"
+}, {
+"base": "Reference",
+"class": "DungeonCellGroup",
+"language": "GDScript",
+"path": "res://dungeon/cell_group.gd"
 }, {
 "base": "Reference",
 "class": "DungeonGenerator",
@@ -45,8 +45,8 @@ _global_script_classes=[ {
 "path": "res://scripts/util.gd"
 } ]
 _global_script_class_icons={
-"Dungeon": "",
 "DungeonCell": "",
+"DungeonCellGroup": "",
 "DungeonGenerator": "",
 "Graph": "",
 "PriorityQueue": "",

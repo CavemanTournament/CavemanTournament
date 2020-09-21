@@ -1,10 +1,9 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://main.gd" type="Script" id=1]
-[ext_resource path="res://dungeon/meshes/meshlib.meshlib" type="MeshLibrary" id=2]
-[ext_resource path="res://actors/player.tscn" type="PackedScene" id=3]
-[ext_resource path="res://debug_controls/debug_controls.gd" type="Script" id=4]
-[ext_resource path="res://debug_controls/camera_target.gd" type="Script" id=5]
+[ext_resource path="res://dungeon/dungeon.tscn" type="PackedScene" id=2]
+[ext_resource path="res://debug_controls/debug_controls.gd" type="Script" id=3]
+[ext_resource path="res://debug_controls/camera_target.gd" type="Script" id=4]
 
 [sub_resource type="SpatialMaterial" id=1]
 flags_unshaded = true
@@ -12,18 +11,14 @@ vertex_color_use_as_albedo = true
 
 [node name="Main" type="Spatial"]
 script = ExtResource( 1 )
-num_cells = 150
-cell_size_mean = 6
-cell_size_deviation = 3
-cell_position_range = 10
 
 [node name="DebugControls" type="Spatial" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.834, 2.13331e-08 )
-script = ExtResource( 4 )
+script = ExtResource( 3 )
 
 [node name="CameraTarget" type="Spatial" parent="DebugControls"]
 transform = Transform( 1, 0, 0, 0, 0.509792, 0.860298, 0, -0.860298, 0.509792, 0, 0, 0 )
-script = ExtResource( 5 )
+script = ExtResource( 4 )
 
 [node name="InterpolatedCamera" type="InterpolatedCamera" parent="DebugControls"]
 transform = Transform( 1, 0, 0, 0, 0.509792, 0.860298, 0, -0.860298, 0.509792, 0, 0.000214994, 0.00037235 )
@@ -46,18 +41,6 @@ shadow_bias = 1.36
 directional_shadow_mode = 0
 directional_shadow_blend_splits = true
 
-[node name="GridMap" type="GridMap" parent="."]
-mesh_library = ExtResource( 2 )
-cell_size = Vector3( 6, 6, 6 )
-data = {
-"cells": PoolIntArray(  )
-}
-__meta__ = {
-"_editor_clip_": 0
-}
-
-[node name="Navigation" type="Navigation" parent="."]
-
-[node name="Player" parent="." instance=ExtResource( 3 )]
-
-[node name="Enemies" type="Node" parent="."]
+[node name="Dungeon" parent="." instance=ExtResource( 2 )]
+cell_size_mean = 6
+cell_size_deviation = 3
