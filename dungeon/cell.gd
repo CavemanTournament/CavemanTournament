@@ -62,6 +62,9 @@ func merge_rect(r: Rect2) -> bool:
 
 	return false
 
+func is_adjacent_to(cell: DungeonCell):
+	return self.rect.intersects(cell.rect, true)
+
 func is_typeless() -> bool:
 	return self.type == DungeonVariables.CellType.NONE
 

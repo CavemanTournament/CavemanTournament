@@ -1,7 +1,7 @@
 [gd_scene load_steps=12 format=2]
 
 [ext_resource path="res://actors/models/Material.material" type="Material" id=1]
-[ext_resource path="res://scripts/spider_enemy.gd" type="Script" id=2]
+[ext_resource path="res://actors/spider_enemy.gd" type="Script" id=2]
 
 [sub_resource type="ArrayMesh" id=1]
 resource_name = "Cube"
@@ -1122,7 +1122,3 @@ anims/WalkSide = SubResource( 8 )
 [node name="CollisionShape" type="CollisionShape" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0 )
 shape = SubResource( 9 )
-
-[node name="Vision" type="RayCast" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0 )
-enabled = true

@@ -27,7 +27,6 @@ func reset_actors():
 	spider.transform.origin = rect_center(start_room)
 	self.dungeon.add_enemy(spider)
 
-
 func _input(event):
 	if event.is_action_pressed('ui_select'):
 		# Wait one frame for removed nodes to be cleared from tree

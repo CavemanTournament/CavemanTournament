@@ -1,4 +1,5 @@
 extends Spatial
+class_name Dungeon
 
 const GRIDMAP_FLOOR = 0
 const GRIDMAP_WALL = 1
@@ -20,6 +21,9 @@ onready var enemies = $Enemies
 var gen: DungeonGenerator
 
 var cells: Array
+var cell_positions: Dictionary
+var cell_id_map: Dictionary
+var cell_distances: Dictionary
 
 func _init():
 	self.gen = DungeonGenerator.new(
@@ -41,10 +45,17 @@ func build() -> void:
 		child.queue_free()
 
 	self.cells = self.gen.generate_cells()
+	_build_cell_id_map()
 	_build_gridmap()
 	_build_nav()
 
 	add_child(self.nav)
+
+func _build_cell_id_map():
+	self.cell_id_map = {}
+
+	for cell in self.cells:
+		self.cell_id_map[cell.id] = cell
 
 func get_room_rects() -> Array:
 	var rects: Array
@@ -74,14 +85,23 @@ func add_player(player: Spatial) -> void:
 	self.players.add_child(player)
 
 func add_enemy(enemy: Spatial) -> void:
-	enemy.set_target(self.players.get_children()[0])
-	enemy.set_navigation(self.nav)
+	enemy.set_dungeon(self)
 	self.enemies.add_child(enemy)
+
+func get_cell_at(pos: Vector3):
+	var cell_pos = self.gridmap.world_to_map(Vector3(pos.x, 0, pos.z))
+	return self.cell_positions[Vector2(cell_pos.x, cell_pos.z)]
+
+func get_players() -> Array:
+	return self.players.get_children()
+
+func get_navigation() -> Navigation:
+	return self.nav
 
 func _build_gridmap() -> void:
 	self.gridmap.clear()
 
-	var grid: Dictionary
+	self.cell_positions = {}
 	var walls: Dictionary
 	var rooms: = []
 
@@ -92,15 +112,15 @@ func _build_gridmap() -> void:
 		if !cell.is_typeless():
 			for x in Util.rangef(cell.rect.position.x, cell.rect.end.x):
 				for y in Util.rangef(cell.rect.position.y, cell.rect.end.y):
-					grid[Vector2(x + 0.5, y + 0.5)] = cell
+					self.cell_positions[Vector2(x + 0.5, y + 0.5)] = cell
 
-	for vect in grid:
+	for vect in self.cell_positions:
 		self.gridmap.set_cell_item(vect.x, 0, vect.y, GRIDMAP_FLOOR, 0)
 
 		for dx in range(-1, 2):
 			for dy in range(-1, 2):
 				var v = Vector2(vect.x + dx, vect.y + dy)
-				if !grid.has(v) && !walls.has(v):
+				if !self.cell_positions.has(v) && !walls.has(v):
 					walls[v] = true
 					self.gridmap.set_cell_item(v.x, 0, v.y, GRIDMAP_WALL, 0)
 
