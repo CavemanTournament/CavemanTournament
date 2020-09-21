@@ -28,14 +28,6 @@ func reset_actors():
 	self.dungeon.add_enemy(spider)
 
 func reset_level():
-	self.gridmap.clear()
-
-	for node in self.enemies.get_children():
-		node.queue_free()
-
-	for node in self.navigation.get_children():
-		node.queue_free()
-
 	# Wait one frame for removed nodes to be cleared from tree
 	yield(get_tree(), "idle_frame")
 	self.dungeon.build()
