@@ -43,7 +43,7 @@ func get_joystick_input():
 
 	velocity = velocity * speed
 
-func get_keyboard_input(delta):
+func get_keyboard_input():
 	var velocity_y = velocity.y
 	velocity = Vector3()
 
@@ -84,9 +84,10 @@ func handle_dodge(_delta: float):
 	if is_dodging:
 		dodge_timer += _delta
 		velocity = velocity.normalized() * dodge_speed
-	
+
 	if dodge_timer > dodge_duration:
 		is_dodging = false
+
 
 func _physics_process(_delta):
 	if !is_dodging:
@@ -96,4 +97,3 @@ func _physics_process(_delta):
 
 	velocity.y -= _delta * gravity
 	velocity = move_and_slide(velocity, Vector3(0, 1, 0), is_dodging)
-
