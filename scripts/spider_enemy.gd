@@ -1,4 +1,4 @@
-extends KinematicBody
+extends "res://scripts/actor.gd"
 
 onready var collider = $Collider
 onready var animation_player = $AnimationPlayer
@@ -16,6 +16,7 @@ var firing = false
 var nav_path: = []
 
 func _ready():
+	health = 300
 	self.animation_player.play("Activate")
 	self.vision.add_exception(self.collider)
 

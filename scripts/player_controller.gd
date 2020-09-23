@@ -1,4 +1,4 @@
-extends KinematicBody
+extends "res://scripts/actor.gd"
 
 export (int) var speed = 20
 export (int) var gravity = 20
@@ -13,7 +13,10 @@ onready var camera = preload("res://actors/player_camera.tscn")
 var velocity := Vector3()
 var test_weapon_cooldown_counter = 0.0
 
+
+
 func _ready():
+	health = 1000
 	var my_camera = camera.instance()
 	my_camera.my_player = self #my_camera contains var to know whom to follow
 	self.get_parent().call_deferred("add_child", my_camera)
