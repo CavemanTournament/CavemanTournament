@@ -17,6 +17,7 @@ var dungeon: Dungeon
 var spawn_point: Vector3
 var player_spawn_distance: float
 var state: int
+var collider: CollisionShape
 
 var nav_path: = []
 var path_update_timer: float
@@ -24,6 +25,12 @@ var path_update_timer: float
 func _ready():
 	self.path_update_timer = 0
 	self.spawn_point = get_navigation().get_closest_point(self.global_transform.origin)
+
+	# Search for collision shape in scene
+	for node in get_children():
+		if node is CollisionShape:
+			self.collider = node
+			break
 
 func set_dungeon(_dungeon: Dungeon) -> void:
 	self.dungeon = _dungeon
@@ -55,7 +62,7 @@ func _update_path():
 	var path_end: = get_target()
 
 	var p = get_navigation().get_simple_path(path_start, path_end, true)
-	self.nav_path = Array(p)
+	self.nav_path = _fix_path(p)
 	self.nav_path.invert()
 
 	var player_point = get_navigation().get_closest_point(get_player().global_transform.origin)
@@ -64,6 +71,47 @@ func _update_path():
 	self.player_spawn_distance = 0
 	for i in range(0, player_to_spawn.size() - 1):
 		self.player_spawn_distance += (player_to_spawn[i] - player_to_spawn[i + 1]).length()
+
+# Fixes navigation path so that agents don't get stuck in corners. The problem
+# is pretty well described in https://github.com/godotengine/godot/issues/1887.
+# Usually the solution is to shrink the navigation mesh, but that doesn't work
+# well if there are agents of different size.
+func _fix_path(p: PoolVector3Array) -> Array:
+	var path = Array(p)
+
+	# Can't fix anything without a collision shape
+	if !self.collider:
+		return path
+
+	# Build a parameter object needed for collision checks
+	var space_state: = get_world().direct_space_state
+	var qr = PhysicsShapeQueryParameters.new()
+	qr.set_shape(self.collider.shape)
+	qr.exclude = [self, get_player()]
+
+	# For each point in the path, test if the agent would collide with a wall
+	# at that point. If it would, then we move the point away from the wall until
+	# there would be no collisions.
+	for i in path.size():
+		# We don't know the exact size of this agent, so we move it little by
+		# little until it doesn't collide.
+		while true:
+			qr.transform = Transform(self.global_transform.basis, path[i] + Vector3(0, 3, 0))
+			var rest_info = space_state.get_rest_info(qr)
+
+			if !rest_info.has('collider_id'):
+				# No collisions, so we can skip this point
+				break
+
+			# The surface normal sometimes has a non-zero y-value for whatever reason
+			var normal = rest_info.normal
+			normal.y = 0
+			normal = normal.normalized()
+
+			# Move the point away from the wall
+			path[i] += rest_info.normal
+
+	return path
 
 func _is_target_visible() -> bool:
 	if !get_player():
@@ -114,7 +162,7 @@ func _get_state() -> int:
 			return STATE_HUNT
 		if !within_attack_max_range && within_max_hunt_range:
 			return STATE_HUNT
-		if !within_attack_max_range && !within_max_hunt_range:
+		if !within_max_hunt_range:
 			return STATE_RETURN
 
 	return self.state
@@ -151,8 +199,8 @@ func follow_path(delta):
 		self.global_transform.origin = pos
 
 func _physics_process(delta):
+	# Update navigation path every 0.5 seconds
 	self.path_update_timer -= delta
-
 	if self.path_update_timer <= 0:
 		_update_path()
 		self.path_update_timer = 0.5
