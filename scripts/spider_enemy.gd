@@ -1,4 +1,4 @@
-extends "res://scripts/actor.gd"
+extends Actor
 
 onready var collider = $Collider
 onready var animation_player = $AnimationPlayer

@@ -9,6 +9,11 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "KinematicBody",
+"class": "Actor",
+"language": "GDScript",
+"path": "res://scripts/actor.gd"
+}, {
 "base": "Reference",
 "class": "Dungeon",
 "language": "GDScript",
@@ -28,6 +33,16 @@ _global_script_classes=[ {
 "class": "Graph",
 "language": "GDScript",
 "path": "res://scripts/graph.gd"
+}, {
+"base": "Item",
+"class": "Gun",
+"language": "GDScript",
+"path": "res://scripts/gun.gd"
+}, {
+"base": "Area",
+"class": "Item",
+"language": "GDScript",
+"path": "res://scripts/item.gd"
 }, {
 "base": "Reference",
 "class": "PriorityQueue",
@@ -50,10 +65,13 @@ _global_script_classes=[ {
 "path": "res://scripts/bullet_script.gd"
 } ]
 _global_script_class_icons={
+"Actor": "",
 "Dungeon": "",
 "DungeonCell": "",
 "DungeonGenerator": "",
 "Graph": "",
+"Gun": "",
+"Item": "",
 "PriorityQueue": "",
 "RTree": "",
 "Util": "",

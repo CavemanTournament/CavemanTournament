@@ -31,6 +31,9 @@ radius = 0.2
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 2, 0.877 )
 radius = 0.2
 
+[node name="Weapon_Slot" type="Spatial" parent="Model"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.750572, 1.44029, 0 )
+
 [node name="Area" type="Area" parent="."]
 
 [node name="CollisionShape" type="CollisionShape" parent="Area"]
