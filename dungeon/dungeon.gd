@@ -1,4 +1,5 @@
 extends Spatial
+class_name Dungeon
 
 const GRIDMAP_FLOOR = 0
 const GRIDMAP_WALL = 1
@@ -20,6 +21,7 @@ onready var enemies = $Enemies
 var gen: DungeonGenerator
 
 var cells: Array
+var cell_positions: Dictionary
 
 func _init():
 	self.gen = DungeonGenerator.new(
@@ -74,14 +76,19 @@ func add_player(player: Spatial) -> void:
 	self.players.add_child(player)
 
 func add_enemy(enemy: Spatial) -> void:
-	enemy.set_target(self.players.get_children()[0])
-	enemy.set_navigation(self.nav)
+	enemy.set_dungeon(self)
 	self.enemies.add_child(enemy)
+
+func get_players() -> Array:
+	return self.players.get_children()
+
+func get_navigation() -> Navigation:
+	return self.nav
 
 func _build_gridmap() -> void:
 	self.gridmap.clear()
 
-	var grid: Dictionary
+	self.cell_positions = {}
 	var walls: Dictionary
 	var rooms: = []
 
@@ -92,15 +99,15 @@ func _build_gridmap() -> void:
 		if !cell.is_typeless():
 			for x in Util.rangef(cell.rect.position.x, cell.rect.end.x):
 				for y in Util.rangef(cell.rect.position.y, cell.rect.end.y):
-					grid[Vector2(x + 0.5, y + 0.5)] = cell
+					self.cell_positions[Vector2(x + 0.5, y + 0.5)] = cell
 
-	for vect in grid:
+	for vect in self.cell_positions:
 		self.gridmap.set_cell_item(vect.x, 0, vect.y, GRIDMAP_FLOOR, 0)
 
 		for dx in range(-1, 2):
 			for dy in range(-1, 2):
 				var v = Vector2(vect.x + dx, vect.y + dy)
-				if !grid.has(v) && !walls.has(v):
+				if !self.cell_positions.has(v) && !walls.has(v):
 					walls[v] = true
 					self.gridmap.set_cell_item(v.x, 0, v.y, GRIDMAP_WALL, 0)
 
@@ -117,119 +124,35 @@ func _build_nav() -> void:
 	self.nav.add_child(navmesh_instance)
 
 func _build_navmesh() -> NavigationMesh:
-	var floors: Dictionary
-	var walls: Dictionary
-
-	for pos in self.gridmap.get_used_cells():
-		var type = self.gridmap.get_cell_item(pos.x, pos.y, pos.z)
-
-		if type == GRIDMAP_FLOOR:
-			floors[Vector2(pos.x, pos.z)] = true
-		if type == GRIDMAP_WALL:
-			walls[Vector2(pos.x, pos.z)] = true
-
 	var surface: = SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 
 	var vertex_idx: = 0
 	var indices: = {}
+	var navmesh_y = 3.1
+	var half_grid_x = self.gridmap.cell_size.x * 0.5
+	var half_grid_z = self.gridmap.cell_size.z * 0.5
 
-	for cell in self.cells:
-		if cell.is_typeless():
+	for grid_pos in self.gridmap.get_used_cells():
+		if self.gridmap.get_cell_item(grid_pos.x, grid_pos.y, grid_pos.z) == GRIDMAP_WALL:
 			continue
 
-		var cell_tl = self.gridmap.map_to_world(cell.rect.position.x + 0.5, 0, cell.rect.position.y + 0.5)
-		var cell_br = self.gridmap.map_to_world(cell.rect.end.x + 0.5, 0, cell.rect.end.y + 0.5)
+		var cell_pos = self.gridmap.map_to_world(grid_pos.x, grid_pos.y, grid_pos.z)
 
-		var half_grid_x = self.gridmap.cell_size.x * 0.5
-		var half_grid_z = self.gridmap.cell_size.z * 0.5
-		var navmesh_y = 3.1
+		var vertices: PoolVector3Array = _quad(
+			Vector3(cell_pos.x - half_grid_x, navmesh_y, cell_pos.z - half_grid_z),
+			Vector3(cell_pos.x + half_grid_x, navmesh_y, cell_pos.z - half_grid_z),
+			Vector3(cell_pos.x + half_grid_x, navmesh_y, cell_pos.z + half_grid_z),
+			Vector3(cell_pos.x - half_grid_x, navmesh_y, cell_pos.z + half_grid_z)
+		)
 
-		var cell_x = cell.rect.position.x + 0.5
-		for x in Util.rangef(cell_tl.x, cell_br.x, self.gridmap.cell_size.x):
-			var cell_z = cell.rect.position.y + 0.5
-			for z in Util.rangef(cell_tl.z, cell_br.z, self.gridmap.cell_size.z):
-				var x1 = x - half_grid_x
-				var x2 = x + half_grid_x
-				var z1 = z - half_grid_z
-				var z2 = z + half_grid_z
+		for v in vertices:
+			if !indices.has(v):
+				surface.add_vertex(v)
+				indices[v] = vertex_idx
+				vertex_idx += 1
 
-				var grid_l = Vector2(cell_x - 1, cell_z)
-				var grid_r = Vector2(cell_x + 1, cell_z)
-				var grid_t = Vector2(cell_x, cell_z - 1)
-				var grid_b = Vector2(cell_x, cell_z + 1)
-				var grid_tl = Vector2(cell_x - 1, cell_z - 1)
-				var grid_tr = Vector2(cell_x + 1, cell_z - 1)
-				var grid_bl = Vector2(cell_x - 1, cell_z + 1)
-				var grid_br = Vector2(cell_x + 1, cell_z + 1)
-
-				var inset_tl = walls.has(grid_tl) && !walls.has(grid_l) && !walls.has(grid_t)
-				var inset_tr = walls.has(grid_tr) && !walls.has(grid_r) && !walls.has(grid_t)
-				var inset_bl = walls.has(grid_bl) && !walls.has(grid_l) && !walls.has(grid_b)
-				var inset_br = walls.has(grid_br) && !walls.has(grid_r) && !walls.has(grid_b)
-
-				var offset_x1: float = 0
-				var offset_z1: float = 0
-				var offset_x2: float = 0
-				var offset_z2: float = 0
-
-				if walls.has(grid_l):
-					offset_x1 = half_grid_x
-				if walls.has(grid_r):
-					offset_x2 = -half_grid_x
-				if walls.has(grid_t):
-					offset_z1 = half_grid_z
-				if walls.has(grid_b):
-					offset_z2 = -half_grid_z
-
-				var vertices: PoolVector3Array = []
-
-				if inset_tl:
-					vertices = _inset_quad(
-						Vector3(x1, navmesh_y, z1),
-						Vector3(x2, navmesh_y, z1),
-						Vector3(x2, navmesh_y, z2),
-						Vector3(x1, navmesh_y, z2)
-					)
-				elif inset_tr:
-					vertices = _inset_quad(
-						Vector3(x2, navmesh_y, z1),
-						Vector3(x2, navmesh_y, z2),
-						Vector3(x1, navmesh_y, z2),
-						Vector3(x1, navmesh_y, z1)
-					)
-				elif inset_br:
-					vertices = _inset_quad(
-						Vector3(x2, navmesh_y, z2),
-						Vector3(x1, navmesh_y, z2),
-						Vector3(x1, navmesh_y, z1),
-						Vector3(x2, navmesh_y, z1)
-					)
-				elif inset_bl:
-					vertices = _inset_quad(
-						Vector3(x1, navmesh_y, z2),
-						Vector3(x1, navmesh_y, z1),
-						Vector3(x2, navmesh_y, z1),
-						Vector3(x2, navmesh_y, z2)
-					)
-				else:
-					vertices = _quad(
-						Vector3(x1 + offset_x1, navmesh_y, z1 + offset_z1),
-						Vector3(x2 + offset_x2, navmesh_y, z1 + offset_z1),
-						Vector3(x2 + offset_x2, navmesh_y, z2 + offset_z2),
-						Vector3(x1 + offset_x1, navmesh_y, z2 + offset_z2)
-					)
-
-				for v in vertices:
-					if !indices.has(v):
-						surface.add_vertex(v)
-						indices[v] = vertex_idx
-						vertex_idx += 1
-
-					surface.add_index(indices[v])
-
-				cell_z += 1
-			cell_x += 1
+			surface.add_index(indices[v])
 
 	var navmesh: = NavigationMesh.new()
 	var mesh: = surface.commit()
@@ -239,12 +162,4 @@ func _build_navmesh() -> NavigationMesh:
 
 func _quad(p1: Vector3, p2: Vector3, p3: Vector3, p4: Vector3) -> PoolVector3Array:
 	var v: PoolVector3Array = [p1, p2, p4, p2, p3, p4]
-	return v
-
-func _inset_quad(p1: Vector3, p2: Vector3, p3: Vector3, p4: Vector3) -> PoolVector3Array:
-	var first: Vector3 = (p1 + p2) * 0.5
-	var last: Vector3 = (p1 + p4) * 0.5
-	var mid: Vector3 = (p1 + p3) * 0.5
-
-	var v: PoolVector3Array = [first, p2, mid, p2, p3, mid, p3, p4, mid, p4, last, mid]
 	return v
