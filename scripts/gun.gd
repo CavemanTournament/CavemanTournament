@@ -12,7 +12,7 @@ onready var bullet = preload("res://actors/bullet.tscn")
 func shoot():
 	if(test_weapon_cooldown_counter>test_weapon_cooldown):
 		var shot = bullet.instance()
-		shot.my_shooter = self.get_parent().get_parent().get_parent()
+		shot.my_shooter = self.get_parent().get_parent().get_parent() #Make this more sensible way, if you have ideas
 		shot.set_global_transform(self.global_transform)
 		shot.transform.origin = barrel.global_transform.origin
 		shot.my_shooter.get_parent().add_child(shot)
