@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://scripts/player_controller.gd" type="Script" id=1]
+[ext_resource path="res://actors/space_rifle_item.tscn" type="PackedScene" id=2]
 
 [sub_resource type="CylinderShape" id=1]
 height = 3.0
@@ -33,6 +34,8 @@ radius = 0.2
 
 [node name="Weapon_Slot" type="Spatial" parent="Model"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.750572, 1.44029, 0 )
+
+[node name="Gun" parent="Model/Weapon_Slot" instance=ExtResource( 2 )]
 
 [node name="Area" type="Area" parent="."]
 

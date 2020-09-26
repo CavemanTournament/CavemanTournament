@@ -5,16 +5,13 @@ export (int) var gravity = 20
 
 const DEAD_ZONE := 0.15
 const use_keyboard := true
-const test_weapon_cooldown := 2
 const actor_type = "player"
 
-onready var bullet = preload("res://actors/bullet.tscn")
 onready var camera = preload("res://actors/player_camera.tscn")
 onready var weapon_hand: Spatial = get_node("Model/Weapon_Slot")
 var items = []
 
 var velocity := Vector3()
-var test_weapon_cooldown_counter = 0.0
 
 
 func _ready():
@@ -53,8 +50,7 @@ func get_keyboard_input(delta):
 	if Input.is_action_pressed('up'):
 		velocity.z -= speed
 	if Input.is_action_pressed('shoot'):
-		if(test_weapon_cooldown_counter>test_weapon_cooldown):
-			shoot()
+		shoot()
 	if velocity.length() > 0:
 		self.rotation.y = Vector2(velocity.x, -velocity.z).angle() + PI / 2
 
@@ -68,24 +64,18 @@ func get_joy_axis_vector_for_player(player_id: int, horizontal_axis: int, vertic
 
 	return axis_vector
 	
-func pickup_weapon(weapon):
-	weapon.get_parent().remove_child(weapon)
-	items.push_front(weapon)
-	if(items.count()==1):
-		weapon.set_global_transform(self.global_transform)
-		weapon.transform.origin = weapon_hand.transform.origin
-		self.add_child(weapon)
+#func pickup_weapon(weapon):
+#	weapon.get_parent().remove_child(weapon)
+#	items.push_front(weapon)
+#	if(items.count()==1):
+#		weapon.set_global_transform(self.global_transform)
+#		weapon.transform.origin = weapon_hand.transform.origin
+#		self.add_child(weapon)
 
 func shoot():
-	var shot = bullet.instance()
-	shot.set_global_transform(self.global_transform)
-	shot.transform.origin = self.transform.origin+Vector3(0,2,0)
-	shot.my_shooter = self
-	self.get_parent().add_child(shot)
-	test_weapon_cooldown_counter = 0
+	weapon_hand.get_child(0).shoot()
 
 func _physics_process(delta):
-	test_weapon_cooldown_counter += delta
 	get_joystick_input() if !use_keyboard else get_keyboard_input(delta)
 
 	velocity.y -= delta * gravity
