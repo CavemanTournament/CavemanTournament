@@ -22,8 +22,6 @@ var gen: DungeonGenerator
 
 var cells: Array
 var cell_positions: Dictionary
-var cell_id_map: Dictionary
-var cell_distances: Dictionary
 
 func _init():
 	self.gen = DungeonGenerator.new(
@@ -45,17 +43,10 @@ func build() -> void:
 		child.queue_free()
 
 	self.cells = self.gen.generate_cells()
-	_build_cell_id_map()
 	_build_gridmap()
 	_build_nav()
 
 	add_child(self.nav)
-
-func _build_cell_id_map():
-	self.cell_id_map = {}
-
-	for cell in self.cells:
-		self.cell_id_map[cell.id] = cell
 
 func get_room_rects() -> Array:
 	var rects: Array
@@ -87,10 +78,6 @@ func add_player(player: Spatial) -> void:
 func add_enemy(enemy: Spatial) -> void:
 	enemy.set_dungeon(self)
 	self.enemies.add_child(enemy)
-
-func get_cell_at(pos: Vector3):
-	var cell_pos = self.gridmap.world_to_map(Vector3(pos.x, 0, pos.z))
-	return self.cell_positions[Vector2(cell_pos.x, cell_pos.z)]
 
 func get_players() -> Array:
 	return self.players.get_children()
