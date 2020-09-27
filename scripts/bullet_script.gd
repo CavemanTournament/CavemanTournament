@@ -3,7 +3,6 @@ extends Area
 
 var speed = 80
 var life_time = 3
-var my_shooter : KinematicBody
 onready var timer = get_node("Timer")
 
 func _ready():
@@ -16,8 +15,7 @@ func _physics_process(delta):
 
 
 func _on_bullet_body_entered(body):
-	if body != my_shooter:
-		queue_free()
+	queue_free()
 
 
 func _on_Timer_timeout():
@@ -26,7 +24,6 @@ func _on_Timer_timeout():
 
 func _on_bullet_area_entered(area):
 	var target = area.get_parent()
-	if target.get('damagable_type') != null:
-		if target.damagable_type == "actor":
-			target.take_damage(100,"kinetic")
-			queue_free()
+	if target is Actor:
+		target.take_damage(100,"kinetic")
+		queue_free()

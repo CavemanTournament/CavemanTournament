@@ -1,13 +1,14 @@
 extends Actor
 
+class_name Player
+
 export (int) var speed = 20
 export (int) var gravity = 20
 
 const DEAD_ZONE := 0.15
 const use_keyboard := true
-const actor_type = "player"
 
-onready var camera = preload("res://actors/player_camera.tscn")
+onready var cam = preload("res://actors/player_camera.tscn")
 onready var weapon_hand: Spatial = get_node("Model/Weapon_Slot")
 var items = []
 
@@ -16,9 +17,9 @@ var velocity := Vector3()
 
 func _ready():
 	health = 1000
-	var my_camera = camera.instance()
-	my_camera.my_player = self #my_camera contains var to know whom to follow
-	self.get_parent().call_deferred("add_child", my_camera)
+	var camera = cam.instance()
+	camera.my_player = self
+	self.get_parent().call_deferred("add_child", camera)
 
 
 func get_joystick_input():
@@ -63,14 +64,6 @@ func get_joy_axis_vector_for_player(player_id: int, horizontal_axis: int, vertic
 	axis_vector.y = Input.get_joy_axis(player_id, vertical_axis)
 
 	return axis_vector
-	
-#func pickup_weapon(weapon):
-#	weapon.get_parent().remove_child(weapon)
-#	items.push_front(weapon)
-#	if(items.count()==1):
-#		weapon.set_global_transform(self.global_transform)
-#		weapon.transform.origin = weapon_hand.transform.origin
-#		self.add_child(weapon)
 
 func shoot():
 	weapon_hand.get_child(0).shoot()
