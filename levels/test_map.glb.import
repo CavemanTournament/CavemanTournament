@@ -2,12 +2,12 @@
 
 importer="scene"
 type="PackedScene"
-path="res://.import/riggedPlayerWalkLeftRight.fbx-5254d3053a45aaa2ea7a1fa95c1748ac.scn"
+path="res://.import/test_map.glb-e9dc27b78d97f24d0c8f04183e02be07.scn"
 
 [deps]
 
-source_file="res://actors/animations/riggedPlayerWalkLeftRight.fbx"
-dest_files=[ "res://.import/riggedPlayerWalkLeftRight.fbx-5254d3053a45aaa2ea7a1fa95c1748ac.scn" ]
+source_file="res://levels/test_map.glb"
+dest_files=[ "res://.import/test_map.glb-e9dc27b78d97f24d0c8f04183e02be07.scn" ]
 
 [params]
 

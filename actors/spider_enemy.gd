@@ -3,6 +3,7 @@ extends DungeonEnemy
 onready var animation_player = $AnimationPlayer
 
 func _ready():
+	self.health = 300
 	self.animation_player.play("Activate")
 
 func _physics_process(delta):

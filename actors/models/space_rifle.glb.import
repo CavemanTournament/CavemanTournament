@@ -2,12 +2,12 @@
 
 importer="scene"
 type="PackedScene"
-path="res://.import/riggedPlayerClubHit2.fbx-fd866393876feb1c52b7570deeb34941.scn"
+path="res://.import/space_rifle.glb-d057846e87ecd69fbfbfdfbfe66b8735.scn"
 
 [deps]
 
-source_file="res://actors/animations/riggedPlayerClubHit2.fbx"
-dest_files=[ "res://.import/riggedPlayerClubHit2.fbx-fd866393876feb1c52b7570deeb34941.scn" ]
+source_file="res://actors/models/space_rifle.glb"
+dest_files=[ "res://.import/space_rifle.glb-d057846e87ecd69fbfbfdfbfe66b8735.scn" ]
 
 [params]
 

@@ -1,4 +1,6 @@
-extends KinematicBody
+extends Actor
+
+class_name Player
 
 export (int) var speed = 20
 export (int) var gravity = 20
@@ -6,9 +8,19 @@ export (int) var gravity = 20
 const DEAD_ZONE := 0.15
 const use_keyboard := true
 
+onready var cam = preload("res://actors/player_camera.tscn")
+onready var weapon_hand: Spatial = get_node("Model/Weapon_Slot")
+var items = []
+
 var velocity := Vector3()
 
-onready var model: Spatial = get_node("Model")
+
+func _ready():
+	health = 1000
+	var camera = cam.instance()
+	camera.my_player = self
+	self.get_parent().call_deferred("add_child", camera)
+
 
 func get_joystick_input():
 	velocity = Vector3()
@@ -22,11 +34,11 @@ func get_joystick_input():
 
 	if right_stick_vector.length() > DEAD_ZONE:
 		# TODO: make this in a more sensible way
-		model.rotation.y = Vector2(right_stick_vector.x, -right_stick_vector.y).angle() + PI / 2
+		self.rotation.y = Vector2(right_stick_vector.x, -right_stick_vector.y).angle() + PI / 2
 
 	velocity = velocity.normalized() * speed
 
-func get_keyboard_input():
+func get_keyboard_input(delta):
 	var velocity_y = velocity.y
 	velocity = Vector3()
 
@@ -38,14 +50,14 @@ func get_keyboard_input():
 		velocity.z += speed
 	if Input.is_action_pressed('up'):
 		velocity.z -= speed
-
+	if Input.is_action_pressed('shoot'):
+		shoot()
 	if velocity.length() > 0:
-		model.rotation.y = Vector2(velocity.x, -velocity.z).angle() + PI / 2
+		self.rotation.y = Vector2(velocity.x, -velocity.z).angle() + PI / 2
 
 	velocity = velocity.normalized() * speed
 	velocity.y = velocity_y
 
-# Gets joystick axis as Vector2
 func get_joy_axis_vector_for_player(player_id: int, horizontal_axis: int, vertical_axis: int) -> Vector2:
 	var axis_vector = Vector2()
 	axis_vector.x = Input.get_joy_axis(player_id, horizontal_axis)
@@ -53,8 +65,11 @@ func get_joy_axis_vector_for_player(player_id: int, horizontal_axis: int, vertic
 
 	return axis_vector
 
+func shoot():
+	weapon_hand.get_child(0).shoot()
+
 func _physics_process(delta):
-	get_joystick_input() if !use_keyboard else get_keyboard_input()
+	get_joystick_input() if !use_keyboard else get_keyboard_input(delta)
 
 	velocity.y -= delta * gravity
 	velocity = move_and_slide(velocity, Vector3(0, 1, 0))

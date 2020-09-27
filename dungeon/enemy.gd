@@ -1,4 +1,4 @@
-extends KinematicBody
+extends Actor
 class_name DungeonEnemy
 
 export (int) var speed = 30

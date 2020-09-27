@@ -2,12 +2,12 @@
 
 importer="scene"
 type="PackedScene"
-path="res://.import/riggedPlayerWalk.fbx-172dda17ef4d07afdad8970a954af229.scn"
+path="res://.import/bullet.glb-034ab9dbc793696c5bf01c68a089a792.scn"
 
 [deps]
 
-source_file="res://actors/animations/riggedPlayerWalk.fbx"
-dest_files=[ "res://.import/riggedPlayerWalk.fbx-172dda17ef4d07afdad8970a954af229.scn" ]
+source_file="res://actors/models/bullet.glb"
+dest_files=[ "res://.import/bullet.glb-034ab9dbc793696c5bf01c68a089a792.scn" ]
 
 [params]
 
