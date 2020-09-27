@@ -26,7 +26,7 @@ func _on_Timer_timeout():
 
 func _on_bullet_area_entered(area):
 	var target = area.get_parent()
-	if target != my_shooter && target.get('damagable_type') != null:
+	if target.get('damagable_type') != null:
 		if target.damagable_type == "actor":
 			target.take_damage(100,"kinetic")
 			queue_free()
