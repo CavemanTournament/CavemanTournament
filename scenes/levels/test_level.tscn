@@ -2,7 +2,6 @@
 
 [ext_resource path="res://scenes/actors/player.tscn" type="PackedScene" id=1]
 
-
 [node name="Test level" type="Spatial"]
 
 [node name="DirectionalLight" type="DirectionalLight" parent="."]

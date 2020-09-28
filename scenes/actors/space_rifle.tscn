@@ -8,6 +8,7 @@ script = ExtResource( 2 )
 barrel_nodepath = NodePath("barrel")
 
 [node name="MeshInstance" type="MeshInstance" parent="."]
+transform = Transform( 0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 0, 0, 0 )
 mesh = ExtResource( 1 )
 material/0 = null
 material/1 = null

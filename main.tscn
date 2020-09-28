@@ -24,18 +24,3 @@ directional_shadow_blend_splits = true
 [node name="Dungeon" parent="." instance=ExtResource( 2 )]
 cell_size_mean = 6
 cell_size_deviation = 3
-[node name="GridMap" type="GridMap" parent="."]
-mesh_library = ExtResource( 2 )
-cell_size = Vector3( 6, 6, 6 )
-data = {
-"cells": PoolIntArray(  )
-}
-__meta__ = {
-"_editor_clip_": 0
-}
-
-[node name="Navigation" type="Navigation" parent="."]
-
-[node name="Player" parent="." instance=ExtResource( 3 )]
-
-[node name="Enemies" type="Node" parent="."]

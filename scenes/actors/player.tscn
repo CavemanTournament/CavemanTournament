@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=13 format=2]
 
 [ext_resource path="res://scripts/actors/player.gd" type="Script" id=1]
 [ext_resource path="res://scenes/actors/space_rifle.tscn" type="PackedScene" id=2]
@@ -8,6 +8,45 @@ height = 3.0
 
 [sub_resource type="SpatialMaterial" id=2]
 albedo_color = Color( 0.219608, 0.572549, 0.945098, 1 )
+
+[sub_resource type="AnimationNodeAnimation" id=3]
+animation = "dodge"
+
+[sub_resource type="AnimationNodeAnimation" id=4]
+animation = "idle"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=5]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id=6]
+switch_mode = 2
+auto_advance = true
+
+[sub_resource type="AnimationNodeStateMachine" id=7]
+states/dodge/node = SubResource( 3 )
+states/dodge/position = Vector2( 308, 54 )
+states/idle/node = SubResource( 4 )
+states/idle/position = Vector2( 166, 54 )
+transitions = [ "idle", "dodge", SubResource( 5 ), "dodge", "idle", SubResource( 6 ) ]
+start_node = "idle"
+
+[sub_resource type="AnimationNodeStateMachinePlayback" id=8]
+
+[sub_resource type="Animation" id=9]
+length = 0.3
+tracks/0/type = "value"
+tracks/0/path = NodePath("Model:translation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.2, 0.3 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector3( 0, 0, 0 ), Vector3( 0, 2, 0 ), Vector3( 0, 0, 0 ) ]
+}
+
+[sub_resource type="Animation" id=10]
 
 [node name="Player" type="KinematicBody"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0159149, 0.219604, -0.157852 )
@@ -42,3 +81,13 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.750572, 1.44029, 0 )
 [node name="CollisionShape" type="CollisionShape" parent="Area"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0 )
 shape = SubResource( 1 )
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+tree_root = SubResource( 7 )
+anim_player = NodePath("../AnimationPlayer")
+active = true
+parameters/playback = SubResource( 8 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/dodge = SubResource( 9 )
+anims/idle = SubResource( 10 )
