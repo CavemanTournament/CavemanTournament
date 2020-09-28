@@ -6,8 +6,8 @@ export var debug_separation = false
 onready var debug_geom: = $ImmediateGeometry
 onready var dungeon: = $Dungeon
 
-const Player = preload("res://actors/player.tscn")
-const Spider = preload("res://actors/spider_enemy.tscn")
+const Player = preload("res://scenes/actors/player.tscn")
+const Spider = preload("res://scenes/actors/spider_enemy.tscn")
 
 func _ready():
 	reset_actors()

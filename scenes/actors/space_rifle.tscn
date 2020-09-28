@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://meshes/space_rifle.mesh" type="ArrayMesh" id=1]
+[ext_resource path="res://scripts/actors/gun.gd" type="Script" id=2]
+
+[node name="Gun" type="Spatial"]
+script = ExtResource( 2 )
+barrel_nodepath = NodePath("barrel")
+
+[node name="MeshInstance" type="MeshInstance" parent="."]
+mesh = ExtResource( 1 )
+material/0 = null
+material/1 = null
+material/2 = null
+
+[node name="barrel" type="Spatial" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.07404 )
