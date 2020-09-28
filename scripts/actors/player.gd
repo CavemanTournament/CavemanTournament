@@ -13,6 +13,10 @@ const DEAD_ZONE := 0.15
 var dodge_speed := 40.0
 var dodge_duration := 0.3
 var dodge_timer := 0.0
+
+var dodge_cooldown := 1.0
+var dodge_cooldown_timer := 1.0
+
 var is_dodging := false
 
 const use_keyboard := true
@@ -75,25 +79,30 @@ func get_joy_axis_vector_for_player(player_id: int, horizontal_axis: int, vertic
 func shoot():
 	weapon_hand.get_child(0).shoot()
 
-func handle_dodge(_delta: float):
-	if Input.is_action_just_pressed('dodge') && !is_dodging:
+func handle_dodge(delta: float):
+	var is_on_cooldown = dodge_cooldown_timer < dodge_cooldown
+
+	if Input.is_action_just_pressed('dodge') && !is_dodging && !is_on_cooldown:
 		is_dodging = true
 		dodge_timer = 0
+		dodge_cooldown_timer = 0
 		state_machine.travel('dodge')
 
+	if is_on_cooldown:
+		dodge_cooldown_timer += delta
+
 	if is_dodging:
-		dodge_timer += _delta
+		dodge_timer += delta
 		velocity = velocity.normalized() * dodge_speed
 
 	if dodge_timer > dodge_duration:
 		is_dodging = false
 
-
-func _physics_process(_delta):
+func _physics_process(delta):
 	if !is_dodging:
 		get_joystick_input() if !use_keyboard else get_keyboard_input()
 
-	handle_dodge(_delta)
+	handle_dodge(delta)
 
-	velocity.y -= _delta * gravity
+	velocity.y -= delta * gravity
 	velocity = move_and_slide(velocity, Vector3(0, 1, 0), is_dodging)
