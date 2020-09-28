@@ -10,77 +10,78 @@ config_version=4
 
 _global_script_classes=[ {
 "base": "KinematicBody",
-"class": "Actor",
+"class": "Agent",
 "language": "GDScript",
-"path": "res://scripts/actor.gd"
+"path": "res://scripts/actors/agent.gd"
+}, {
+"base": "Area",
+"class": "Bullet",
+"language": "GDScript",
+"path": "res://scripts/actors/bullet.gd"
 }, {
 "base": "Spatial",
 "class": "Dungeon",
 "language": "GDScript",
-"path": "res://dungeon/dungeon.gd"
+"path": "res://scripts/actors/dungeon.gd"
 }, {
 "base": "Reference",
 "class": "DungeonCell",
 "language": "GDScript",
-"path": "res://dungeon/cell.gd"
+"path": "res://scripts/utils/dungeon/cell.gd"
 }, {
 "base": "Reference",
 "class": "DungeonCellGroup",
 "language": "GDScript",
-"path": "res://dungeon/cell_group.gd"
+"path": "res://scripts/utils/dungeon/cell_group.gd"
 }, {
-"base": "Actor",
+"base": "Agent",
 "class": "DungeonEnemy",
 "language": "GDScript",
-"path": "res://dungeon/enemy.gd"
+"path": "res://scripts/actors/dungeon_enemy.gd"
 }, {
 "base": "Reference",
 "class": "DungeonGenerator",
 "language": "GDScript",
-"path": "res://dungeon/generator.gd"
+"path": "res://scripts/utils/dungeon/generator.gd"
 }, {
 "base": "Reference",
 "class": "Graph",
 "language": "GDScript",
-"path": "res://scripts/graph.gd"
+"path": "res://scripts/utils/graph.gd"
 }, {
 "base": "Spatial",
 "class": "Gun",
 "language": "GDScript",
-"path": "res://scripts/gun.gd"
+"path": "res://scripts/actors/gun.gd"
 }, {
 "base": "Area",
 "class": "Item",
 "language": "GDScript",
-"path": "res://scripts/item.gd"
+"path": "res://scripts/actors/item.gd"
 }, {
-"base": "Actor",
+"base": "Agent",
 "class": "Player",
 "language": "GDScript",
-"path": "res://actors/player.gd"
+"path": "res://scripts/actors/player.gd"
 }, {
 "base": "Reference",
 "class": "PriorityQueue",
 "language": "GDScript",
-"path": "res://scripts/priority_queue.gd"
+"path": "res://scripts/utils/priority_queue.gd"
 }, {
 "base": "Reference",
 "class": "RTree",
 "language": "GDScript",
-"path": "res://scripts/r_tree.gd"
+"path": "res://scripts/utils/r_tree.gd"
 }, {
 "base": "Reference",
 "class": "Util",
 "language": "GDScript",
-"path": "res://scripts/util.gd"
-}, {
-"base": "Area",
-"class": "bullet",
-"language": "GDScript",
-"path": "res://scripts/bullet_script.gd"
+"path": "res://scripts/utils/util.gd"
 } ]
 _global_script_class_icons={
-"Actor": "",
+"Agent": "",
+"Bullet": "",
 "Dungeon": "",
 "DungeonCell": "",
 "DungeonCellGroup": "",
@@ -92,8 +93,7 @@ _global_script_class_icons={
 "Player": "",
 "PriorityQueue": "",
 "RTree": "",
-"Util": "",
-"bullet": ""
+"Util": ""
 }
 
 [application]
@@ -104,7 +104,7 @@ config/icon="res://icon.png"
 
 [autoload]
 
-DungeonVariables="*res://dungeon/variables.gd"
+DungeonVariables="*res://scripts/utils/dungeon/variables.gd"
 
 [display]
 
