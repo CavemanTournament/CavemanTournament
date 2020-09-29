@@ -22,5 +22,6 @@ directional_shadow_mode = 0
 directional_shadow_blend_splits = true
 
 [node name="Dungeon" parent="." instance=ExtResource( 2 )]
+num_cells = 50
 cell_size_mean = 6
 cell_size_deviation = 3

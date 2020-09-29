@@ -6,7 +6,7 @@ export (NodePath) var barrel_nodepath
 onready var barrel: Spatial = get_node(barrel_nodepath)
 onready var Bullet = preload("res://scenes/actors/bullet.tscn")
 
-const test_weapon_cooldown := 2
+const test_weapon_cooldown := 0.2
 var test_weapon_cooldown_counter = 0.0
 
 func shoot():
