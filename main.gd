@@ -22,10 +22,6 @@ func _spawn_agents() -> void:
 	var player = Player.instance()
 	player.transform.origin = _rect_center(rects[start_room])
 	self.dungeon.add_player(player)
-	
-#	var enemy = Spider.instance()
-#	enemy.transform.origin = _rect_center(rects[start_room]) - Vector3(6, 0, 0)
-#	self.dungeon.add_enemy(enemy)
 
 	var cell_size: Vector3 = self.dungeon.gridmap.cell_size
 	var half_cell: Vector3 = cell_size * 0.5

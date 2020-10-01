@@ -23,6 +23,9 @@ var gen: DungeonGenerator
 var cells: Array
 var cell_positions: Dictionary
 
+var thread: Thread
+var semaphore: Semaphore
+
 func _init():
 	self.gen = DungeonGenerator.new(
 		self.num_cells,
@@ -37,6 +40,32 @@ func _init():
 
 func _ready():
 	build()
+
+	self.semaphore = Semaphore.new()
+	self.thread = Thread.new()
+	self.thread.start(self, "_thread_update_enemy_paths")
+
+	var timer: = Timer.new()
+	timer.wait_time = 0.5
+	timer.connect("timeout", self, "_on_timer_timeout")
+	add_child(timer)
+	timer.start()
+
+func _on_timer_timeout():
+	self.semaphore.post()
+
+func _thread_update_enemy_paths(userdata):
+	while true:
+		self.semaphore.wait()
+
+		for enemy in self.enemies.get_children():
+			var path_start = self.navigation.get_closest_point(enemy.global_transform.origin)
+			var path_end = enemy.get_target()
+			var path = self.navigation.get_simple_path(path_start, path_end, true)
+			enemy.call_deferred("update_path", path)
+
+func _exit_tree():
+	self.thread.wait_to_finish()
 
 func build() -> void:
 	for child in self.players.get_children() + self.enemies.get_children():

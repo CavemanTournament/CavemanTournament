@@ -17,11 +17,7 @@ const PATH_UPDATE_INTERVAL: = 1.0
 
 var dungeon: Dungeon
 var spawn_point: Vector3
-var player_spawn_distance: float
 var state: int
-
-var nav_path: = []
-var path_update_timer: float
 
 var acceleration: = GSAITargetAcceleration.new()
 
@@ -53,8 +49,6 @@ onready var attack_steering: = GSAIBlend.new(agent)
 
 func _ready():
 	_setup_agent()
-	
-	self.path_update_timer = randf() * PATH_UPDATE_INTERVAL
 	self.spawn_point = self.global_transform.origin
 
 func _setup_agent():
@@ -64,11 +58,11 @@ func _setup_agent():
 	self.movement_steering.add(self.separation_behavior, 5)
 	self.movement_steering.add(self.path_following_behavior, 1)
 	self.movement_steering.add(self.look_behavior, 1)
-	
+
 	# Setup attack steering (behavior when attacking)
 	self.face_behavior.alignment_tolerance = deg2rad(5)
 	self.attack_steering.add(self.face_behavior, 1)
-	
+
 	self.agent.linear_speed_max = self.speed
 	self.agent.linear_acceleration_max = self.speed * 10
 	self.agent.linear_drag_percentage = 0.1
@@ -76,7 +70,7 @@ func _setup_agent():
 	self.agent.angular_acceleration_max = deg2rad(10000)
 	self.agent.angular_drag_percentage = 0.5
 	self.agent.bounding_radius = 2.0
-	
+
 	# Setup proximity collision shape. The shape needs to exist in scene tree.
 	var proximity_shape = CylinderShape.new()
 	proximity_shape.radius = self.agent.bounding_radius * 6
@@ -86,7 +80,7 @@ func _setup_agent():
 	var proximity_collider_node = Node.new()
 	proximity_collider_node.add_child(proximity_collider)
 	add_child(proximity_collider_node)
-	
+
 	self.proximity.shape = proximity_shape
 
 func _update_target_agent():
@@ -113,17 +107,7 @@ func get_target() -> Vector3:
 
 	return get_navigation().get_closest_point(get_player().global_transform.origin)
 
-func _update_path():
-	if !get_player() || !get_navigation():
-		self.nav_path = []
-		return
-
-	var path_start: = get_navigation().get_closest_point(self.global_transform.origin)
-	var path_end: = get_target()
-
-	self.player_spawn_distance = get_player().global_transform.origin.distance_to(self.spawn_point)
-	
-	var path = get_navigation().get_simple_path(path_start, path_end, true)
+func update_path(path: Array):
 	self.path_following_behavior.path = GSAIPath.new(path, true)
 
 func _is_target_visible() -> bool:
@@ -141,12 +125,13 @@ func _get_state() -> int:
 	if !get_player():
 		return STATE_IDLE
 
-	var target_visible = _is_target_visible()
 	var target_distance = self.global_transform.origin.distance_to(get_player().global_transform.origin)
 	var spawn_distance = self.global_transform.origin.distance_to(self.spawn_point)
 
-	var within_min_hunt_range = self.player_spawn_distance <= self.hunt_min_range
-	var within_max_hunt_range = self.player_spawn_distance <= self.hunt_max_range
+	var player_spawn_distance = get_player().global_transform.origin.distance_to(self.spawn_point)
+	var target_visible = _is_target_visible()
+	var within_min_hunt_range = player_spawn_distance <= self.hunt_min_range
+	var within_max_hunt_range = player_spawn_distance <= self.hunt_max_range
 	var within_attack_min_range = target_distance <= self.attack_min_range
 	var within_attack_max_range = target_distance <= self.attack_max_range
 
@@ -182,17 +167,12 @@ func _get_state() -> int:
 
 func _physics_process(delta):
 	_update_target_agent()
-	
-	self.path_update_timer -= delta
-	if self.path_update_timer <= 0:
-		_update_path()
-		self.path_update_timer = PATH_UPDATE_INTERVAL
 
 	self.state = _get_state()
-	
+
 	# Apply gravity
 	self.acceleration.linear.y += self.gravity * delta
-	
+
 	if (self.state == STATE_HUNT || self.state == STATE_RETURN) && self.path_following_behavior.path.length > 0:
 		self.movement_steering.calculate_steering(self.acceleration)
 		self.agent._apply_steering(self.acceleration, delta)
