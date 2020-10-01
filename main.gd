@@ -20,8 +20,12 @@ func _spawn_agents() -> void:
 	var start_room = randi() % rects.size()
 
 	var player = Player.instance()
-	player.transform.origin = _rect_center(rects[start_room]) - Vector3(1, 0, 0)
+	player.transform.origin = _rect_center(rects[start_room])
 	self.dungeon.add_player(player)
+	
+#	var enemy = Spider.instance()
+#	enemy.transform.origin = _rect_center(rects[start_room]) - Vector3(6, 0, 0)
+#	self.dungeon.add_enemy(enemy)
 
 	var cell_size: Vector3 = self.dungeon.gridmap.cell_size
 	var half_cell: Vector3 = cell_size * 0.5
@@ -36,7 +40,7 @@ func _spawn_agents() -> void:
 			var room_positions: = []
 			for x in range(rect.position.x, rect.end.x, cell_size.x):
 				for z in range(rect.position.y, rect.end.y, cell_size.y):
-					room_positions.append(Vector3(x + half_cell.x, 0.1, z + half_cell.y))
+					room_positions.append(Vector3(x + half_cell.x, 0, z + half_cell.y))
 
 			room_positions.shuffle()
 

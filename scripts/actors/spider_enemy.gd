@@ -6,7 +6,7 @@ func _ready():
 	self.health = 300
 	self.animation_player.play("Activate")
 
-func _physics_process(delta):
+func _process(delta):
 	if self.state == STATE_HUNT || self.state == STATE_RETURN:
 		self.animation_player.play("Walk")
 

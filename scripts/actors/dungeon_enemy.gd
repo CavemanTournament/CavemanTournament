@@ -13,59 +13,84 @@ const STATE_RETURN = 1
 const STATE_HUNT = 2
 const STATE_ATTACK = 3
 
-const DetourCrowdAgent: NativeScript = preload("res://addons/godotdetour/detourcrowdagent.gdns")
-const DetourCrowdAgentParameters: NativeScript = preload("res://addons/godotdetour/detourcrowdagentparameters.gdns")
+const PATH_UPDATE_INTERVAL: = 1.0
 
 var dungeon: Dungeon
 var spawn_point: Vector3
+var player_spawn_distance: float
 var state: int
+
 var nav_path: = []
-var player_visible: bool
-var g: ImmediateGeometry
+var path_update_timer: float
 
-var detour_agent
+var acceleration: = GSAITargetAcceleration.new()
 
-func _ready() -> void:
-	var params = DetourCrowdAgentParameters.new()
-	params.position = self.global_transform.origin
-	params.radius = 1.0
-	params.height = 1.0
-	params.maxAcceleration = 100.0
-	params.maxSpeed = 20.0
-	params.filterName = "default"
-	params.anticipateTurns = false
-	params.optimizeVisibility = false
-	params.optimizeTopology = false
-	params.avoidObstacles = true
-	params.avoidOtherAgents = true
-	params.obstacleAvoidance = 10
-	params.separationWeight = 1.0
-	self.detour_agent = self.dungeon.navigation.addAgent(params)
+onready var agent: = GSAIKinematicBody3DAgent.new(self)
+onready var target_agent: = GSAIAgentLocation.new()
+onready var proximity: = GSAICollisionProximity.new(agent, self)
+
+# Enemy should follow path
+onready var path_following_behavior: = GSAIFollowPath.new(
+	agent,
+	GSAIPath.new([self.global_transform.origin, self.global_transform.origin]),
+	6.0
+)
+
+# Enemy should look where it's going
+onready var look_behavior: = GSAILookWhereYouGo.new(agent, true)
+
+# Enemy should avoid collisions
+onready var avoidance_behavior: = GSAIAvoidCollisions.new(agent, proximity)
+
+# Enemy should separate from other enemies
+onready var separation_behavior: = GSAISeparation.new(agent, proximity)
+
+# Enemy should face the player when attacking
+onready var face_behavior: = GSAIFace.new(agent, target_agent, true)
+
+onready var movement_steering: = GSAIBlend.new(agent)
+onready var attack_steering: = GSAIBlend.new(agent)
+
+func _ready():
+	_setup_agent()
+	
+	self.path_update_timer = randf() * PATH_UPDATE_INTERVAL
 	self.spawn_point = self.global_transform.origin
 
-	var timer = Timer.new()
-	timer.connect("timeout", self, "_on_timer_update_target")
-	timer.set_wait_time(0.5)
-	add_child(timer)
-	timer.start()
+func _setup_agent():
+	# Setup movement steering (behavior when hunting or returning to spawn)
+	self.look_behavior.alignment_tolerance = deg2rad(5)
+	self.movement_steering.add(self.avoidance_behavior, 10)
+	self.movement_steering.add(self.separation_behavior, 5)
+	self.movement_steering.add(self.path_following_behavior, 1)
+	self.movement_steering.add(self.look_behavior, 1)
+	
+	# Setup attack steering (behavior when attacking)
+	self.face_behavior.alignment_tolerance = deg2rad(5)
+	self.attack_steering.add(self.face_behavior, 1)
+	
+	self.agent.linear_speed_max = self.speed
+	self.agent.linear_acceleration_max = self.speed * 10
+	self.agent.linear_drag_percentage = 0.1
+	self.agent.angular_speed_max = deg2rad(10000)
+	self.agent.angular_acceleration_max = deg2rad(10000)
+	self.agent.angular_drag_percentage = 0.5
+	self.agent.bounding_radius = 2.0
+	
+	# Setup proximity collision shape. The shape needs to exist in scene tree.
+	var proximity_shape = CylinderShape.new()
+	proximity_shape.radius = self.agent.bounding_radius * 6
+	proximity_shape.height = 0.1
+	var proximity_collider = CollisionShape.new()
+	proximity_collider.shape = proximity_shape
+	var proximity_collider_node = Node.new()
+	proximity_collider_node.add_child(proximity_collider)
+	add_child(proximity_collider_node)
+	
+	self.proximity.shape = proximity_shape
 
-#	self.g = ImmediateGeometry.new()
-#	var m = SpatialMaterial.new()
-#	m.vertex_color_use_as_albedo = true
-#	self.g.set_material_override(m)
-#	get_parent().add_child(self.g)
-
-func _on_timer_update_target():
-	self.player_visible = _is_player_visible()
-
-	if self.state == STATE_HUNT:
-		self.detour_agent.moveTowards(get_player().global_transform.origin)
-	if self.state == STATE_RETURN:
-		self.detour_agent.moveTowards(self.spawn_point)
-	if self.state == STATE_ATTACK && self.detour_agent.isMoving:
-		self.detour_agent.stop()
-	if self.state == STATE_IDLE && self.detour_agent.isMoving:
-		self.detour_agent.stop()
+func _update_target_agent():
+	self.target_agent.position = get_player().global_transform.origin
 
 func set_dungeon(_dungeon: Dungeon) -> void:
 	self.dungeon = _dungeon
@@ -82,26 +107,33 @@ func get_player() -> Spatial:
 
 	return self.dungeon.get_players()[0]
 
-func get_enemies() -> Array:
-	if !self.dungeon:
-		return []
-
-	return self.dungeon.get_enemies()
-
 func get_target() -> Vector3:
 	if !self.dungeon || (self.state != STATE_HUNT && self.state != STATE_ATTACK):
-		return self.spawn_point
+		return get_navigation().get_closest_point(self.spawn_point)
 
 	return get_navigation().get_closest_point(get_player().global_transform.origin)
 
-func _is_player_visible() -> bool:
+func _update_path():
+	if !get_player() || !get_navigation():
+		self.nav_path = []
+		return
+
+	var path_start: = get_navigation().get_closest_point(self.global_transform.origin)
+	var path_end: = get_target()
+
+	self.player_spawn_distance = get_player().global_transform.origin.distance_to(self.spawn_point)
+	
+	var path = get_navigation().get_simple_path(path_start, path_end, true)
+	self.path_following_behavior.path = GSAIPath.new(path, true)
+
+func _is_target_visible() -> bool:
 	if !get_player():
 		return false
 
 	var pos = self.global_transform.origin + Vector3(0, 1, 0)
 	var target_pos = get_player().global_transform.origin + Vector3(0, 1, 0)
 	var space_state = get_world().direct_space_state
-	var result = space_state.intersect_ray(pos, target_pos, get_enemies())
+	var result = space_state.intersect_ray(pos, target_pos, [self])
 
 	return result.has('collider') && result.collider == get_player()
 
@@ -109,36 +141,25 @@ func _get_state() -> int:
 	if !get_player():
 		return STATE_IDLE
 
+	var target_visible = _is_target_visible()
 	var target_distance = self.global_transform.origin.distance_to(get_player().global_transform.origin)
 	var spawn_distance = self.global_transform.origin.distance_to(self.spawn_point)
-	var player_spawn_distance = get_player().global_transform.origin.distance_to(self.spawn_point)
 
-	var within_min_hunt_range = player_spawn_distance <= self.hunt_min_range
-	var within_max_hunt_range = player_spawn_distance <= self.hunt_max_range
+	var within_min_hunt_range = self.player_spawn_distance <= self.hunt_min_range
+	var within_max_hunt_range = self.player_spawn_distance <= self.hunt_max_range
 	var within_attack_min_range = target_distance <= self.attack_min_range
 	var within_attack_max_range = target_distance <= self.attack_max_range
 
-#	if within_min_hunt_range:
-#		self.g.clear()
-#		self.g.begin(Mesh.PRIMITIVE_LINES)
-#		if target_visible:
-#			self.g.set_color(Color(0, 1, 0))
-#		else:
-#			self.g.set_color(Color(1, 0, 0))
-#		self.g.add_vertex(self.global_transform.origin + Vector3(0, 1, 0))
-#		self.g.add_vertex(get_player().global_transform.origin + Vector3(0, 1, 0))
-#		self.g.end()
-
 	if self.state == STATE_IDLE:
-		if self.player_visible && within_min_hunt_range && within_attack_min_range:
+		if target_visible && within_min_hunt_range && within_attack_min_range:
 			return STATE_ATTACK
-		if self.player_visible && within_min_hunt_range:
+		if target_visible && within_min_hunt_range:
 			return STATE_HUNT
 
 	if self.state == STATE_RETURN:
-		if self.player_visible && within_max_hunt_range && within_attack_max_range:
+		if target_visible && within_max_hunt_range && within_attack_max_range:
 			return STATE_ATTACK
-		if self.player_visible && within_max_hunt_range:
+		if target_visible && within_max_hunt_range:
 			return STATE_HUNT
 		if spawn_distance < 3:
 			return STATE_IDLE
@@ -146,11 +167,11 @@ func _get_state() -> int:
 	if self.state == STATE_HUNT:
 		if !within_max_hunt_range:
 			return STATE_RETURN
-		if self.player_visible && within_attack_min_range:
+		if target_visible && within_attack_min_range:
 			return STATE_ATTACK
 
 	if self.state == STATE_ATTACK:
-		if !self.player_visible && within_max_hunt_range:
+		if !target_visible && within_max_hunt_range:
 			return STATE_HUNT
 		if !within_attack_max_range && within_max_hunt_range:
 			return STATE_HUNT
@@ -159,25 +180,23 @@ func _get_state() -> int:
 
 	return self.state
 
-func rotate_towards(pos: Vector3, delta):
-	var look_transform = self.global_transform.looking_at(pos, Vector3.UP)
-	var q = Quat(self.global_transform.basis).slerp(Quat(look_transform.basis), 6 * delta)
-	self.global_transform.basis = Basis(q)
-
-func _process(delta):
-	if !self.detour_agent:
-		return
-
-	self.global_transform.origin = self.detour_agent.position
-
-	if self.state == STATE_ATTACK:
-		rotate_towards(get_player().global_transform.origin, delta)
-	elif self.detour_agent.isMoving:
-		look_at(self.global_transform.origin + self.detour_agent.velocity, self.global_transform.basis.y)
-
 func _physics_process(delta):
-	if !self.detour_agent:
-		return
+	_update_target_agent()
+	
+	self.path_update_timer -= delta
+	if self.path_update_timer <= 0:
+		_update_path()
+		self.path_update_timer = PATH_UPDATE_INTERVAL
 
 	self.state = _get_state()
+	
+	# Apply gravity
+	self.acceleration.linear.y += self.gravity * delta
+	
+	if (self.state == STATE_HUNT || self.state == STATE_RETURN) && self.path_following_behavior.path.length > 0:
+		self.movement_steering.calculate_steering(self.acceleration)
+		self.agent._apply_steering(self.acceleration, delta)
 
+	if self.state == STATE_ATTACK:
+		self.attack_steering.calculate_steering(self.acceleration)
+		self.agent._apply_steering(self.acceleration, delta)
