@@ -110,6 +110,9 @@ func get_target() -> Vector3:
 func update_path(path: Array):
 	self.path_following_behavior.path = GSAIPath.new(path, true)
 
+func should_update_path() -> bool:
+	return self.state == STATE_HUNT || self.state == STATE_RETURN
+
 func _is_target_visible() -> bool:
 	if !get_player():
 		return false

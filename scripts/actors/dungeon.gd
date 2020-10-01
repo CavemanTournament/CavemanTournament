@@ -46,7 +46,7 @@ func _ready():
 	self.thread.start(self, "_thread_update_enemy_paths")
 
 	var timer: = Timer.new()
-	timer.wait_time = 0.5
+	timer.wait_time = 0.25
 	timer.connect("timeout", self, "_on_timer_timeout")
 	add_child(timer)
 	timer.start()
@@ -59,10 +59,11 @@ func _thread_update_enemy_paths(userdata):
 		self.semaphore.wait()
 
 		for enemy in self.enemies.get_children():
-			var path_start = self.navigation.get_closest_point(enemy.global_transform.origin)
-			var path_end = enemy.get_target()
-			var path = self.navigation.get_simple_path(path_start, path_end, true)
-			enemy.call_deferred("update_path", path)
+			if enemy.should_update_path():
+				var path_start = self.navigation.get_closest_point(enemy.global_transform.origin)
+				var path_end = enemy.get_target()
+				var path = self.navigation.get_simple_path(path_start, path_end, true)
+				enemy.call_deferred("update_path", path)
 
 func _exit_tree():
 	self.thread.wait_to_finish()
